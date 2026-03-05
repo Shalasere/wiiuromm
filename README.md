@@ -52,12 +52,89 @@ Wii/vWii:
 make -C wii
 ```
 
+Host core tests:
+
+```bash
+make -C tests test
+```
+
+Standalone API/downloader integration fixture test:
+
+```bash
+make -C tests integration
+```
+
+Full validation (host tests + emulator runtime smoke):
+
+```bash
+make validate
+```
+
+Visible emulator launch validation (opens emulator windows):
+
+```bash
+make validate-visible
+```
+
+Adjust runtime smoke timeout (seconds):
+
+```bash
+RUNTIME_TIMEOUT_SECONDS=20 make validate
+```
+
+Visible mode with custom timeout:
+
+```bash
+RUNTIME_TIMEOUT_SECONDS=20 make validate-visible
+```
+
 Fast dev loops:
 
 ```bash
 ./scripts/dev-wiiu.sh   # build + run in Cemu
 ./scripts/dev-wii.sh    # build + run in Dolphin
 ```
+
+## Control Conventions
+
+Shared schema now keeps controls consistent across targets:
+
+- Confirm (`Select`): Wii U `A`, Wii Remote `A`, GameCube `A`
+- Back: Wii U `B`, Wii Remote `B`, GameCube `B`
+- Queue view: Wii U `Y`, Wii Remote `1`, GameCube `Y`
+- Start downloads: Wii U `X`, Wii Remote `2`, GameCube `X`
+- Search: Wii U `-`, Wii Remote `-`, GameCube `R`
+- Quit: Wii U `HOME/+`, Wii Remote `HOME/+`, GameCube `START`
+- Diagnostics/Updater: Wii U `R/L`, GameCube `Z/L`
+
+## Screen Model
+
+Shared core now emits per-view screen title + hint lines for:
+
+- Platform Browser
+- ROM Browser
+- ROM Detail
+- Queue
+- Downloading
+- Diagnostics
+- Updater
+
+Screen output is now colorized with the same per-view palette as the Switch app:
+PLATFORMS (blue), ROMS (teal), DETAIL (deep blue), QUEUE (purple),
+DOWNLOADING (amber), DIAGNOSTICS (green), UPDATER (indigo), ERROR (red).
+
+## Implemented Next 10
+
+1. Search filter cycling in ROM browser (`OpenSearch`).
+2. ROM sort cycling (`TitleAsc`, `SizeAsc`, `SizeDesc`) on Left/Right.
+3. Empty-search-result guard (cannot open detail when no match).
+4. Queue remove-selected on Left in Queue view.
+5. Queue clear pending/failed on Right in Queue view.
+6. Start action toggles pause/resume while downloading.
+7. Deterministic simulated failure for large ROMs on first attempt.
+8. Retry failed queue item with Select in Queue view.
+9. Diagnostics counters (input/enqueue/dup/completed/failed/search).
+10. Updater state machine (`Idle/Checking/Available/Applying/Applied`).
 
 Notes:
 
@@ -81,5 +158,5 @@ Wii/vWii (Homebrew Channel path `apps/wiiuromm/`):
 
 ## Next
 
-- Extract shared core logic from `switchromm` into `core/` in this repo.
+- Expand shared core (`core/`) from state/queue prototype to API/config/downloader pieces.
 - Keep platform glue (input/fs/net/render) target-specific.

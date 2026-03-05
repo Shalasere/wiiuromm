@@ -6,9 +6,9 @@
 
 TARGET      := wiiuromm
 BUILD       := build
-SOURCES     := source
+SOURCES     := source ../core
 DATA        := data
-INCLUDES    := include
+INCLUDES    := include ../include
 
 LIBS        := -lwiiuse -lbte -logc -lm
 LIBDIRS     := $(LIBOGC_LIB)

@@ -6,7 +6,7 @@
 
 TARGET      := wiiuromm
 BUILD       := build
-SOURCES     := source
+SOURCES     := source core
 DATA        := data
 INCLUDES    := include
 
@@ -78,9 +78,23 @@ export CPPFLAGS   := $(INCLUDE)
 
 export LIBPATHS   := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
-.PHONY: all clean $(BUILD)
+.PHONY: all clean runtime runtime-visible validate validate-visible $(BUILD)
 
 all: $(BUILD)
+
+runtime:
+	@$(MAKE) --no-print-directory -C tests runtime
+
+runtime-visible:
+	@$(MAKE) --no-print-directory -C tests runtime-visible
+
+validate:
+	@$(MAKE) --no-print-directory -C tests test
+	@$(MAKE) --no-print-directory runtime
+
+validate-visible:
+	@$(MAKE) --no-print-directory -C tests test
+	@$(MAKE) --no-print-directory runtime-visible
 
 $(BUILD):
 	@[ -d $@ ] || mkdir -p $@
