@@ -10,6 +10,10 @@ SDROOT="$1"
 APP_NAME="wiiuromm"
 APPDIR="$SDROOT/wiiu/apps/$APP_NAME"
 
+# Default toolchain env for non-interactive shells.
+export DEVKITPRO="${DEVKITPRO:-/opt/devkitpro}"
+export DEVKITPPC="${DEVKITPPC:-$DEVKITPRO/devkitPPC}"
+
 mkdir -p "$APPDIR"
 
 make

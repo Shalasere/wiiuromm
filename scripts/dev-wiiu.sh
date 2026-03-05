@@ -6,6 +6,10 @@ APP="wiiuromm"
 BUILD_OUT="$ROOT/$APP.rpx"
 RUN_DIR="$ROOT/run"
 
+# Default toolchain env for non-interactive shells.
+export DEVKITPRO="${DEVKITPRO:-/opt/devkitpro}"
+export DEVKITPPC="${DEVKITPPC:-$DEVKITPRO/devkitPPC}"
+
 mkdir -p "$RUN_DIR"
 
 find_cemu() {

@@ -5,6 +5,10 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="wiiuromm"
 BUILD_OUT="$ROOT/wii/$APP.dol"
 
+# Default toolchain env for non-interactive shells.
+export DEVKITPRO="${DEVKITPRO:-/opt/devkitpro}"
+export DEVKITPPC="${DEVKITPPC:-$DEVKITPRO/devkitPPC}"
+
 find_dolphin() {
   if command -v dolphin-emu >/dev/null 2>&1; then
     command -v dolphin-emu

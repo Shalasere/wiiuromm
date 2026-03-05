@@ -18,7 +18,7 @@ export APP_VERSION   := 0.1.0
 CFLAGS      := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections
 CXXFLAGS    := $(CFLAGS) -std=gnu++17 -fno-exceptions -fno-rtti
 LDFLAGS     := -Wl,-Map,$(notdir $*.map),--gc-sections
-LIBS        := -lwhb -lwut
+LIBS        := -lwut
 LIBDIRS     :=
 
 ifeq ($(strip $(DEVKITPRO)),)
@@ -30,12 +30,18 @@ $(error "Please set DEVKITPPC in your environment. export DEVKITPPC=$(DEVKITPRO)
 endif
 
 export WUT_ROOT ?= $(DEVKITPRO)/wut
+LIBDIRS     := $(WUT_ROOT)
 WUT_RULES := $(WUT_ROOT)/share/wut_rules
 ifeq ($(wildcard $(WUT_RULES)),)
 $(error "wut_rules not found at $(WUT_RULES). Install the wut package.")
 endif
 
 include $(WUT_RULES)
+
+# Wii U ABI/stdlib settings provided by wut rules.
+CFLAGS      += $(MACHDEP)
+CXXFLAGS    += $(MACHDEP)
+LDFLAGS     += $(RPXSPECS) $(MACHDEP)
 
 export WUT_MAKE_RPX := 1
 
@@ -65,8 +71,10 @@ export OFILES     := $(OFILES_BIN) $(OFILES_SRC)
 export HFILES_BIN := $(addsuffix .h,$(subst .,_,$(BINFILES)))
 
 export INCLUDE    := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+                     -I$(WUT_ROOT)/include \
                      $(foreach dir,$(LIBDIRS),-I$(dir)/include) \
                      -I$(CURDIR)/$(BUILD)
+export CPPFLAGS   := $(INCLUDE)
 
 export LIBPATHS   := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
 
@@ -87,7 +95,7 @@ else
 .PHONY: all
 DEPENDS := $(OFILES:.o=.d)
 
-all: $(OUTPUT).elf
+all: $(OUTPUT).rpx
 
 $(OUTPUT).elf : $(OFILES)
 $(OFILES_SRC) : $(HFILES_BIN)

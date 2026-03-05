@@ -1,4 +1,5 @@
 #include <coreinit/time.h>
+#include <coreinit/thread.h>
 #include <vpad/input.h>
 #include <whb/log.h>
 #include <whb/log_console.h>
