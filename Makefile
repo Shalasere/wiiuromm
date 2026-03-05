@@ -1,0 +1,97 @@
+#---------------------------------------------------------------------------------
+# wiiuromm - native Wii U Makefile (wut)
+#---------------------------------------------------------------------------------
+
+.SUFFIXES:
+
+TARGET      := wiiuromm
+BUILD       := build
+SOURCES     := source
+DATA        := data
+INCLUDES    := include
+
+export APP_NAME      := wiiuromm
+export APP_SHORTNAME := wiiuromm
+export APP_AUTHOR    := shalasere
+export APP_VERSION   := 0.1.0
+
+CFLAGS      := -g -Wall -Wextra -O2 -ffunction-sections -fdata-sections
+CXXFLAGS    := $(CFLAGS) -std=gnu++17 -fno-exceptions -fno-rtti
+LDFLAGS     := -Wl,-Map,$(notdir $*.map),--gc-sections
+LIBS        := -lwhb -lwut
+LIBDIRS     :=
+
+ifeq ($(strip $(DEVKITPRO)),)
+$(error "Please set DEVKITPRO in your environment. export DEVKITPRO=/opt/devkitpro")
+endif
+
+ifeq ($(strip $(DEVKITPPC)),)
+$(error "Please set DEVKITPPC in your environment. export DEVKITPPC=$(DEVKITPRO)/devkitPPC")
+endif
+
+export WUT_ROOT ?= $(DEVKITPRO)/wut
+WUT_RULES := $(WUT_ROOT)/share/wut_rules
+ifeq ($(wildcard $(WUT_RULES)),)
+$(error "wut_rules not found at $(WUT_RULES). Install the wut package.")
+endif
+
+include $(WUT_RULES)
+
+export WUT_MAKE_RPX := 1
+
+ifneq ($(BUILD),$(notdir $(CURDIR)))
+
+export OUTPUT    := $(CURDIR)/$(TARGET)
+export TOPDIR    := $(CURDIR)
+export DEPSDIR   := $(CURDIR)/$(BUILD)
+
+export VPATH     := $(foreach dir,$(SOURCES),$(CURDIR)/$(dir)) \
+                    $(foreach dir,$(DATA),$(CURDIR)/$(dir))
+
+CFILES           := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.c)))
+CPPFILES         := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.cpp)))
+SFILES           := $(foreach dir,$(SOURCES),$(notdir $(wildcard $(dir)/*.s)))
+BINFILES         := $(foreach dir,$(DATA),$(notdir $(wildcard $(dir)/*.*)))
+
+ifeq ($(strip $(CPPFILES)),)
+export LD        := $(CC)
+else
+export LD        := $(CXX)
+endif
+
+export OFILES_BIN := $(addsuffix .o,$(BINFILES))
+export OFILES_SRC := $(CPPFILES:.cpp=.o) $(CFILES:.c=.o) $(SFILES:.s=.o)
+export OFILES     := $(OFILES_BIN) $(OFILES_SRC)
+export HFILES_BIN := $(addsuffix .h,$(subst .,_,$(BINFILES)))
+
+export INCLUDE    := $(foreach dir,$(INCLUDES),-I$(CURDIR)/$(dir)) \
+                     $(foreach dir,$(LIBDIRS),-I$(dir)/include) \
+                     -I$(CURDIR)/$(BUILD)
+
+export LIBPATHS   := $(foreach dir,$(LIBDIRS),-L$(dir)/lib)
+
+.PHONY: all clean $(BUILD)
+
+all: $(BUILD)
+
+$(BUILD):
+	@[ -d $@ ] || mkdir -p $@
+	@$(MAKE) --no-print-directory -C $(BUILD) -f $(CURDIR)/Makefile
+
+clean:
+	@echo clean ...
+	@rm -fr $(BUILD) $(TARGET).elf $(TARGET).rpx $(TARGET).wuhb
+
+else
+
+.PHONY: all
+DEPENDS := $(OFILES:.o=.d)
+
+all: $(OUTPUT).elf
+
+$(OUTPUT).elf : $(OFILES)
+$(OFILES_SRC) : $(HFILES_BIN)
+
+-include $(DEPENDS)
+
+endif

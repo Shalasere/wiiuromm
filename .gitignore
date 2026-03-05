@@ -1,0 +1,13 @@
+# Build artifacts
+build/
+*.elf
+*.dol
+*.rpx
+*.wuhb
+*.map
+*.o
+*.a
+*.d
+
+# macOS
+.DS_Store
