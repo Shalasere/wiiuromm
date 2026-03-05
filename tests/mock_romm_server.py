@@ -31,6 +31,8 @@ FILES = {
     "wu_002": b"XENO-DATA-" * 170,
 }
 
+FAIL_COUNT = {"sw_002": 0}
+
 
 def paginate(items, page, limit):
     start = max(0, (page - 1) * limit)
@@ -110,6 +112,10 @@ class Handler(BaseHTTPRequestHandler):
             data = FILES.get(file_id)
             if data is None:
                 self._write_json(404, {"error": "file not found"})
+                return
+            if file_id == "sw_002" and FAIL_COUNT["sw_002"] == 0:
+                FAIL_COUNT["sw_002"] += 1
+                self._write_json(503, {"error": "temporary unavailable"})
                 return
             self.send_response(200)
             self.send_header("Content-Type", "application/octet-stream")

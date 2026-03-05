@@ -11,6 +11,8 @@ struct AppConfig {
     std::string downloadDir{"run/downloads"};
     bool fat32Safe{false};
     int maxConcurrentDownloads{1};
+    int maxDownloadRetries{2};
+    int retryBackoffMs{25};
 };
 
 AppConfig defaultConfig();

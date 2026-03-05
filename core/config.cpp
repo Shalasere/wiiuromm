@@ -89,6 +89,14 @@ bool validateConfig(const AppConfig &cfg, std::string &outError) {
         outError = "max_concurrent_downloads must be in [1,8]";
         return false;
     }
+    if (cfg.maxDownloadRetries < 0 || cfg.maxDownloadRetries > 8) {
+        outError = "max_download_retries must be in [0,8]";
+        return false;
+    }
+    if (cfg.retryBackoffMs < 0 || cfg.retryBackoffMs > 10000) {
+        outError = "retry_backoff_ms must be in [0,10000]";
+        return false;
+    }
     outError.clear();
     return true;
 }
@@ -118,6 +126,8 @@ bool loadConfigFromFile(const std::string &path, AppConfig &out, std::string &ou
     (void)extractStringField(body, "download_dir", out.downloadDir);
     (void)extractBoolField(body, "fat32_safe", out.fat32Safe);
     (void)extractIntField(body, "max_concurrent_downloads", out.maxConcurrentDownloads);
+    (void)extractIntField(body, "max_download_retries", out.maxDownloadRetries);
+    (void)extractIntField(body, "retry_backoff_ms", out.retryBackoffMs);
 
     if (!validateConfig(out, outError)) return false;
     return true;
@@ -135,6 +145,24 @@ bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
             return false;
         }
         cfg.maxConcurrentDownloads = parsed;
+    }
+
+    if (const char *v = std::getenv("ROMM_MAX_DOWNLOAD_RETRIES")) {
+        int parsed = 0;
+        if (!parseIntStrict(v, parsed)) {
+            outError = "invalid ROMM_MAX_DOWNLOAD_RETRIES";
+            return false;
+        }
+        cfg.maxDownloadRetries = parsed;
+    }
+
+    if (const char *v = std::getenv("ROMM_RETRY_BACKOFF_MS")) {
+        int parsed = 0;
+        if (!parseIntStrict(v, parsed)) {
+            outError = "invalid ROMM_RETRY_BACKOFF_MS";
+            return false;
+        }
+        cfg.retryBackoffMs = parsed;
     }
 
     if (const char *v = std::getenv("ROMM_FAT32_SAFE")) {

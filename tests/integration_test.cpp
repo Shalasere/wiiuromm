@@ -163,6 +163,15 @@ int main() {
                 "token preflight should succeed");
     requireTrue(session.tokenValid, "token should be marked valid");
 
+    romm::AppConfig badCfg = cfg;
+    badCfg.authToken = "bad-token";
+    romm::AuthSession badSession;
+    romm::ErrorInfo badInfo;
+    std::string badErr;
+    requireTrue(!romm::validateTokenPreflight(badCfg, client, badSession, badInfo, badErr),
+                "bad token preflight should fail");
+    requireTrue(badInfo.kind == romm::ErrorKind::Auth, "bad token should classify auth failure");
+
     romm::Status status = romm::makeDefaultStatus();
     requireTrue(romm::syncCatalogFromApi(status, cfg, client, 2, err),
                 "catalog sync should succeed");
@@ -171,22 +180,30 @@ int main() {
     requireTrue(!status.platforms[0].roms[0].downloadUrl.empty(), "rom download_url should be set");
 
     std::vector<romm::DownloadRequest> queue;
-    const auto &r0 = status.platforms[0].roms[0];
-    romm::DownloadRequest q0;
-    q0.id = r0.id;
-    q0.title = r0.title;
-    q0.url = r0.downloadUrl;
-    q0.outputPath = (outDir / (r0.id + ".bin")).string();
-    queue.push_back(q0);
+    cfg.maxDownloadRetries = 2;
+    cfg.retryBackoffMs = 1;
+    for (const auto &rom : status.platforms[0].roms) {
+        if (rom.id == "sw_001" || rom.id == "sw_002") {
+            romm::DownloadRequest req;
+            req.id = rom.id;
+            req.title = rom.title;
+            req.url = rom.downloadUrl;
+            req.outputPath = (outDir / (rom.id + ".bin")).string();
+            queue.push_back(req);
+        }
+    }
+    requireTrue(queue.size() == 2, "expected two queue items for integration download");
 
     Observer obs;
     requireTrue(romm::runDownloadQueue(cfg, client, queue, obs, err),
                 "download queue should succeed");
     requireTrue(obs.failures == 0, "no download failures expected");
-    requireTrue(obs.completed == 1, "one download should complete");
+    requireTrue(obs.completed == 2, "two downloads should complete");
     requireTrue(obs.progressEvents > 0, "progress callback should fire");
-    requireTrue(fs::exists(q0.outputPath), "output file should exist");
-    requireTrue(fs::file_size(q0.outputPath) > 0, "output file should have content");
+    for (const auto &q : queue) {
+        requireTrue(fs::exists(q.outputPath), "output file should exist");
+        requireTrue(fs::file_size(q.outputPath) > 0, "output file should have content");
+    }
 
     std::cout << "integration_test: all checks passed\n";
     return 0;
