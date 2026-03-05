@@ -5,12 +5,14 @@ ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 APP="wiiuromm"
 BUILD_OUT="$ROOT/$APP.rpx"
 RUN_DIR="$ROOT/run"
+MLC_DIR="$RUN_DIR/cemu_mlc"
 
 # Default toolchain env for non-interactive shells.
 export DEVKITPRO="${DEVKITPRO:-/opt/devkitpro}"
 export DEVKITPPC="${DEVKITPPC:-$DEVKITPRO/devkitPPC}"
 
 mkdir -p "$RUN_DIR"
+mkdir -p "$MLC_DIR"
 
 find_cemu() {
   if command -v cemu >/dev/null 2>&1; then
@@ -39,5 +41,5 @@ if [[ ! -f "$BUILD_OUT" ]]; then
   exit 1
 fi
 
-echo "[run] Launching Cemu with $BUILD_OUT"
-exec "$CEMU_BIN" -g "$BUILD_OUT"
+echo "[run] Launching Cemu with $BUILD_OUT (mlc: $MLC_DIR)"
+exec "$CEMU_BIN" --mlc "$MLC_DIR" -g "$BUILD_OUT"

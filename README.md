@@ -59,6 +59,12 @@ Fast dev loops:
 ./scripts/dev-wii.sh    # build + run in Dolphin
 ```
 
+Notes:
+
+- Cemu may prompt for game paths/graphics packs on first run. You can skip graphics packs.
+- `dev-wiiu.sh` uses a local MLC path: `run/cemu_mlc`.
+- Wii target accepts either Wii Remote `HOME` or GameCube `START` to exit.
+
 ## Package to SD
 
 Wii U (Homebrew Launcher path `wiiu/apps/wiiuromm/`):

@@ -1,4 +1,5 @@
 #include <gccore.h>
+#include <ogc/pad.h>
 #include <stdio.h>
 #include <wiiuse/wpad.h>
 
@@ -24,14 +25,20 @@ static void init_video_console(void) {
 int main(void) {
     init_video_console();
     WPAD_Init();
+    PAD_Init();
 
     printf("wiiuromm (Wii/vWii target) skeleton\n");
-    printf("Press HOME on Wii Remote to exit.\n");
+    printf("Press HOME on Wii Remote or START on GameCube pad to exit.\n");
 
     while (1) {
         WPAD_ScanPads();
+        PAD_ScanPads();
         u32 pressed = WPAD_ButtonsDown(0);
+        u16 gcPressed = PAD_ButtonsDown(0);
         if (pressed & WPAD_BUTTON_HOME) {
+            break;
+        }
+        if (gcPressed & PAD_BUTTON_START) {
             break;
         }
         VIDEO_WaitVSync();
