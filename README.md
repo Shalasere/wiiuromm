@@ -31,6 +31,13 @@ export DEVKITPRO=/opt/devkitpro
 export DEVKITPPC=$DEVKITPRO/devkitPPC
 ```
 
+Install emulators:
+
+```bash
+./scripts/install-cemu-local.sh       # local user install, no sudo
+./scripts/install-dolphin-arch.sh     # Arch system install (sudo)
+```
+
 ## Build
 
 Wii U:
@@ -43,6 +50,13 @@ Wii/vWii:
 
 ```bash
 make -C wii
+```
+
+Fast dev loops:
+
+```bash
+./scripts/dev-wiiu.sh   # build + run in Cemu
+./scripts/dev-wii.sh    # build + run in Dolphin
 ```
 
 ## Package to SD

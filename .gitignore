@@ -11,3 +11,8 @@ build/
 
 # macOS
 .DS_Store
+
+# Local runtime artifacts
+run/
+logs/
+*.log
