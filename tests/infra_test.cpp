@@ -36,8 +36,8 @@ void testConfigFileAndEnv() {
             << "  \"schema_version\": 1,\n"
             << "  \"server_url\": \"http://127.0.0.1:8080\",\n"
             << "  \"username\": \"dev\",\n"
-            << "  \"password\": \"test-password\",\n"
-            << "  \"auth_token\": \"test-token\",\n"
+            << "  \"password\": \"pw\",\n"
+            << "  \"auth_token\": \"tok\",\n"
             << "  \"target_platform_id\": \"wii\",\n"
             << "  \"download_dir\": \"run/downloads\",\n"
             << "  \"fat32_safe\": true,\n"
@@ -54,13 +54,13 @@ void testConfigFileAndEnv() {
 
     setenv("SERVER_URL", "https://games.fortkickass.tech", 1);
     setenv("USERNAME", "root", 1);
-    setenv("PASSWORD", "test-password", 1);
+    setenv("PASSWORD", "pw", 1);
     setenv("PLATFORM", "wii", 1);
     setenv("ROMM_MAX_CONCURRENT_DOWNLOADS", "3", 1);
     requireTrue(romm::applyEnvOverrides(cfg, err), "applyEnvOverrides should pass");
     requireTrue(cfg.serverUrl == "https://games.fortkickass.tech", "server url env override should apply");
     requireTrue(cfg.username == "root", "username env override should apply");
-    requireTrue(cfg.password == "test-password", "password env override should apply");
+    requireTrue(cfg.password == "pw", "password env override should apply");
     requireTrue(cfg.targetPlatformId == "wii", "platform env override should apply");
     requireTrue(cfg.maxConcurrentDownloads == 3, "concurrency env override should apply");
 

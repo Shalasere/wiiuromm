@@ -7,7 +7,7 @@ from urllib.parse import parse_qs, urlparse
 
 TOKEN = "test-token"
 BASIC_USER = "root"
-BASIC_PASS = "test-password"
+BASIC_PASS = "pw"
 
 PLATFORMS = [
     {"id": 1, "slug": "switch", "name": "Nintendo Switch", "display_name": "Nintendo Switch"},

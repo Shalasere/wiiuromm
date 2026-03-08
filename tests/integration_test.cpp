@@ -154,7 +154,7 @@ int main() {
     romm::AppConfig cfg = romm::defaultConfig();
     cfg.serverUrl = base;
     cfg.username = "root";
-    cfg.password = "test-password";
+    cfg.password = "pw";
     cfg.targetPlatformId = "wii";
     cfg.downloadDir = outDir.string();
 

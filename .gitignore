@@ -17,3 +17,5 @@ run/
 .harness/
 logs/
 *.log
+.env
+.env.*

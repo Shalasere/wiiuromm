@@ -821,7 +821,7 @@ int main() {
     romm::AppConfig cfg = romm::defaultConfig();
     cfg.serverUrl = "http://games.fortkickass.tech";
     cfg.username = "root";
-    cfg.password = "test-password";
+    cfg.password = "pw";
     cfg.targetPlatformId = "wii,gc,gb,gbc,gba,nes,snes,n64";
 
     std::string cfgErr;

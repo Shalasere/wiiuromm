@@ -53,7 +53,7 @@ Expected: all host tests green, both targets build, runtime smoke passes.
 - Before commit:
 
 ```bash
-rg -n 'password|token|secret|api[_-]?key|authorization' tests core source wii/source
+./scripts/check-secrets.sh
 git diff --staged
 ```
 
