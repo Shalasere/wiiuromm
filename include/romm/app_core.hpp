@@ -55,6 +55,7 @@ struct PlatformEntry {
     std::string id;
     std::string name;
     std::vector<RomEntry> roms;
+    std::string slug;
 };
 
 struct QueueItem {
@@ -106,6 +107,8 @@ struct Status {
     RomSortMode romSort{RomSortMode::TitleAsc};
 
     DiagnosticsCounters diagnostics;
+    bool uiBusy{false};
+    uint32_t uiFrameCounter{0};
 
     UpdaterState updaterState{UpdaterState::Idle};
     std::string currentVersion{"0.1.0"};
@@ -133,5 +136,6 @@ const char *romSortModeName(RomSortMode mode);
 const char *updaterStateName(UpdaterState state);
 
 std::vector<std::string> buildStatusLines(const Status &status, bool colorize = false);
+std::vector<std::string> buildFramedStatusLines(const Status &status, bool colorize = false);
 
 } // namespace romm

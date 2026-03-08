@@ -7,7 +7,10 @@ namespace romm {
 struct AppConfig {
     int schemaVersion{1};
     std::string serverUrl{"http://localhost:8080"};
+    std::string username;
+    std::string password;
     std::string authToken;
+    std::string targetPlatformId{"wii"};
     std::string downloadDir{"run/downloads"};
     bool fat32Safe{false};
     int maxConcurrentDownloads{1};

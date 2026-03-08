@@ -37,4 +37,5 @@ if [[ ! -f "$BUILD_OUT" ]]; then
 fi
 
 echo "[run] Launching Dolphin with $BUILD_OUT"
-exec "$DOLPHIN_BIN" -e "$BUILD_OUT"
+exec env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET QT_QPA_PLATFORM=xcb \
+  "$DOLPHIN_BIN" -e "$BUILD_OUT"

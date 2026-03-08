@@ -143,6 +143,7 @@ public:
 int main() {
     const char *base = std::getenv("MOCK_BASE_URL");
     requireTrue(base != nullptr && std::string(base).size() > 0, "MOCK_BASE_URL must be set");
+    const bool liveSmokeOnly = (std::getenv("LIVE_SMOKE_ONLY") != nullptr);
 
     const fs::path outDir = fs::temp_directory_path() / "wiiuromm_integration";
     std::error_code ec;
@@ -152,7 +153,9 @@ int main() {
 
     romm::AppConfig cfg = romm::defaultConfig();
     cfg.serverUrl = base;
-    cfg.authToken = "test-token";
+    cfg.username = "root";
+    cfg.password = "Quicksilver0917!";
+    cfg.targetPlatformId = "wii";
     cfg.downloadDir = outDir.string();
 
     CurlHttpClient client;
@@ -163,27 +166,35 @@ int main() {
                 "token preflight should succeed");
     requireTrue(session.tokenValid, "token should be marked valid");
 
-    romm::AppConfig badCfg = cfg;
-    badCfg.authToken = "bad-token";
-    romm::AuthSession badSession;
-    romm::ErrorInfo badInfo;
-    std::string badErr;
-    requireTrue(!romm::validateTokenPreflight(badCfg, client, badSession, badInfo, badErr),
-                "bad token preflight should fail");
-    requireTrue(badInfo.kind == romm::ErrorKind::Auth, "bad token should classify auth failure");
+    if (!liveSmokeOnly) {
+        romm::AppConfig badCfg = cfg;
+        badCfg.authToken = "bad-token";
+        romm::AuthSession badSession;
+        romm::ErrorInfo badInfo;
+        std::string badErr;
+        requireTrue(!romm::validateTokenPreflight(badCfg, client, badSession, badInfo, badErr),
+                    "bad token preflight should fail");
+        requireTrue(badInfo.kind == romm::ErrorKind::Auth, "bad token should classify auth failure");
+    }
 
     romm::Status status = romm::makeDefaultStatus();
     requireTrue(romm::syncCatalogFromApi(status, cfg, client, 2, err),
                 "catalog sync should succeed");
-    requireTrue(!status.platforms.empty(), "platform list should not be empty");
+    requireTrue(status.platforms.size() == 1, "platform list should be filtered to one item");
+    requireTrue(status.platforms[0].slug == "wii", "platform should be Wii");
     requireTrue(!status.platforms[0].roms.empty(), "rom list should not be empty");
-    requireTrue(!status.platforms[0].roms[0].downloadUrl.empty(), "rom download_url should be set");
+    if (!liveSmokeOnly) {
+        requireTrue(!status.platforms[0].roms[0].downloadUrl.empty(), "rom download_url should be set");
+    } else {
+        std::cout << "integration_test: live smoke passed (preflight + Wii catalog sync)\n";
+        return 0;
+    }
 
     std::vector<romm::DownloadRequest> queue;
     cfg.maxDownloadRetries = 2;
     cfg.retryBackoffMs = 1;
     for (const auto &rom : status.platforms[0].roms) {
-        if (rom.id == "sw_001" || rom.id == "sw_002") {
+        if (rom.id == "wi_001" || rom.id == "wi_002") {
             romm::DownloadRequest req;
             req.id = rom.id;
             req.title = rom.title;

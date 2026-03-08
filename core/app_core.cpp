@@ -361,21 +361,21 @@ Status makeDefaultStatus() {
     Status status;
 
     status.platforms = {
-        {"switch", "Nintendo Switch", {
-            {"sw_001", "Metroid Prime Remastered", "Retro Studios", "", 7168},
-            {"sw_002", "The Legend of Zelda: Tears of the Kingdom", "Nintendo", "", 18432},
-            {"sw_003", "Super Mario Odyssey", "Nintendo", "", 5888},
-        }},
-        {"wiiu", "Wii U", {
-            {"wu_001", "Mario Kart 8", "Nintendo EAD", "", 4948},
-            {"wu_002", "Xenoblade Chronicles X", "Monolith Soft", "", 23100},
-            {"wu_003", "The Wind Waker HD", "Nintendo", "", 2752},
-        }},
         {"wii", "Wii", {
             {"wi_001", "Super Mario Galaxy 2", "Nintendo EAD", "", 4447},
             {"wi_002", "Donkey Kong Country Returns", "Retro Studios", "", 3366},
-            {"wi_003", "The Last Story", "Mistwalker", "", 7260},
-        }},
+            {"wi_003", "Metroid Prime Trilogy", "Retro Studios", "", 23100},
+        }, "wii"},
+        {"wiiu", "Wii U", {
+            {"wu_001", "Mario Kart 8", "Nintendo EAD", "", 5870},
+            {"wu_002", "The Legend of Zelda: Breath of the Wild", "Nintendo EPD", "", 13800},
+            {"wu_003", "Xenoblade Chronicles X", "Monolith Soft", "", 22900},
+        }, "wiiu"},
+        {"switch", "Switch", {
+            {"sw_001", "Super Mario Odyssey", "Nintendo EPD", "", 5800},
+            {"sw_002", "Metroid Dread", "MercurySteam", "", 4500},
+            {"sw_003", "Mario Kart 8 Deluxe", "Nintendo EPD", "", 11200},
+        }, "switch"},
     };
 
     status.lastMessage = "Ready.";
@@ -732,6 +732,30 @@ bool startsWith(const std::string &text, const char *prefix) {
     return text.rfind(prefix, 0) == 0;
 }
 
+char spinnerChar(uint32_t frame) {
+    static const char kSpin[] = {'|', '/', '-', '\\'};
+    return kSpin[frame % 4];
+}
+
+std::string stripAnsi(const std::string &src) {
+    std::string out;
+    out.reserve(src.size());
+    bool esc = false;
+    for (size_t i = 0; i < src.size(); ++i) {
+        const char c = src[i];
+        if (!esc && c == '\x1b') {
+            esc = true;
+            continue;
+        }
+        if (esc) {
+            if ((c >= '@' && c <= '~') || c == '\n') esc = false;
+            continue;
+        }
+        out.push_back(c);
+    }
+    return out;
+}
+
 } // namespace
 
 std::vector<std::string> buildStatusLines(const Status &status, bool colorize) {
@@ -759,6 +783,19 @@ std::vector<std::string> buildStatusLines(const Status &status, bool colorize) {
                                " [" + std::to_string(selectedVisibleIdx + 1) + "/" +
                                std::to_string(visible.size()) + "]");
             lines.emplace_back("Size         : " + std::to_string(rom.sizeMb) + " MB");
+        }
+    }
+
+    if (status.currentView == Status::View::DETAIL) {
+        const RomEntry *rom = selectedRom(status);
+        if (rom != nullptr) {
+            lines.emplace_back("Detail ID    : " + rom->id);
+            lines.emplace_back("Detail Title : " + rom->title);
+            lines.emplace_back("Publisher    : " + (rom->subtitle.empty() ? std::string("<unknown>") : rom->subtitle));
+            lines.emplace_back("Download URL : " + (rom->downloadUrl.empty() ? std::string("<missing>") : rom->downloadUrl));
+            lines.emplace_back("Detail Size  : " + std::to_string(rom->sizeMb) + " MB");
+        } else {
+            lines.emplace_back("Detail       : <no ROM selected>");
         }
     }
 
@@ -861,6 +898,32 @@ std::vector<std::string> buildStatusLines(const Status &status, bool colorize) {
     }
 
     return lines;
+}
+
+std::vector<std::string> buildFramedStatusLines(const Status &status, bool colorize) {
+    const std::vector<std::string> body = buildStatusLines(status, colorize);
+    std::vector<std::string> out;
+    out.reserve(body.size() + 8);
+
+    const bool busy = status.uiBusy || status.downloadWorkerRunning;
+    const std::string spin(1, spinnerChar(status.uiFrameCounter));
+    const std::string busyLabel = busy ? ("busy " + spin) : "idle";
+
+    out.emplace_back("======================================================================");
+    out.emplace_back("wiiuromm | " + std::string(screenTitle(status.currentView)) +
+                     " | " + std::string(viewName(status.currentView)) +
+                     " | " + busyLabel);
+    out.emplace_back(std::string("hint: ") + screenHint(status.currentView));
+    out.emplace_back("----------------------------------------------------------------------");
+    for (const auto &line : body) {
+        out.emplace_back("| " + line);
+    }
+    out.emplace_back("----------------------------------------------------------------------");
+    out.emplace_back("| footer: queue=" + std::to_string(status.downloadQueue.size()) +
+                     " history=" + std::to_string(status.downloadHistory.size()) +
+                     " msg=\"" + stripAnsi(status.lastMessage) + "\"");
+    out.emplace_back("======================================================================");
+    return out;
 }
 
 } // namespace romm

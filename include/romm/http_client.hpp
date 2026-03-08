@@ -40,4 +40,14 @@ public:
                    std::string &outError) override;
 };
 
+class SocketHttpClient final : public IHttpClient {
+public:
+    bool get(const std::string &url, const HttpHeaders &headers,
+             HttpResponse &out, std::string &outError) override;
+    bool streamGet(const std::string &url, const HttpHeaders &headers,
+                   int &outStatusCode,
+                   const std::function<bool(const uint8_t *, size_t)> &onChunk,
+                   std::string &outError) override;
+};
+
 } // namespace romm

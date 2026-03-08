@@ -173,10 +173,9 @@ void testQueueRemoveAndClear() {
 
 void testPauseResumeAndFailureRetry() {
     romm::Status status = romm::makeDefaultStatus();
-    (void)romm::applyAction(status, romm::Action::Down); // Wii U platform
     goToRoms(status);
-    (void)romm::applyAction(status, romm::Action::Down);
-    (void)romm::applyAction(status, romm::Action::Down); // Xenoblade (largest)
+    (void)romm::applyAction(status, romm::Action::Right); // SizeAsc
+    (void)romm::applyAction(status, romm::Action::Right); // SizeDesc (largest first)
     (void)romm::applyAction(status, romm::Action::Select); // detail
     (void)romm::applyAction(status, romm::Action::Select); // enqueue
     (void)romm::applyAction(status, romm::Action::StartDownload);

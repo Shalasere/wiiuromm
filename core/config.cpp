@@ -66,6 +66,12 @@ bool parseIntStrict(const char *text, int &out) {
     return true;
 }
 
+const char *firstNonEmptyEnv(const char *primary, const char *fallback) {
+    const char *v = std::getenv(primary);
+    if (v != nullptr && *v != '\0') return v;
+    return std::getenv(fallback);
+}
+
 } // namespace
 
 AppConfig defaultConfig() {
@@ -83,6 +89,10 @@ bool validateConfig(const AppConfig &cfg, std::string &outError) {
     }
     if (cfg.downloadDir.empty()) {
         outError = "download_dir must not be empty";
+        return false;
+    }
+    if (cfg.targetPlatformId.empty()) {
+        outError = "target_platform_id must not be empty";
         return false;
     }
     if (cfg.maxConcurrentDownloads < 1 || cfg.maxConcurrentDownloads > 8) {
@@ -122,7 +132,11 @@ bool loadConfigFromFile(const std::string &path, AppConfig &out, std::string &ou
     out.schemaVersion = schema;
 
     (void)extractStringField(body, "server_url", out.serverUrl);
+    (void)extractStringField(body, "username", out.username);
+    (void)extractStringField(body, "password", out.password);
     (void)extractStringField(body, "auth_token", out.authToken);
+    (void)extractStringField(body, "target_platform_id", out.targetPlatformId);
+    (void)extractStringField(body, "platform", out.targetPlatformId);
     (void)extractStringField(body, "download_dir", out.downloadDir);
     (void)extractBoolField(body, "fat32_safe", out.fat32Safe);
     (void)extractIntField(body, "max_concurrent_downloads", out.maxConcurrentDownloads);
@@ -134,9 +148,12 @@ bool loadConfigFromFile(const std::string &path, AppConfig &out, std::string &ou
 }
 
 bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
-    if (const char *v = std::getenv("ROMM_SERVER_URL")) cfg.serverUrl = v;
-    if (const char *v = std::getenv("ROMM_AUTH_TOKEN")) cfg.authToken = v;
-    if (const char *v = std::getenv("ROMM_DOWNLOAD_DIR")) cfg.downloadDir = v;
+    if (const char *v = firstNonEmptyEnv("ROMM_SERVER_URL", "SERVER_URL")) cfg.serverUrl = v;
+    if (const char *v = firstNonEmptyEnv("ROMM_USERNAME", "USERNAME")) cfg.username = v;
+    if (const char *v = firstNonEmptyEnv("ROMM_PASSWORD", "PASSWORD")) cfg.password = v;
+    if (const char *v = firstNonEmptyEnv("ROMM_AUTH_TOKEN", "API_TOKEN")) cfg.authToken = v;
+    if (const char *v = firstNonEmptyEnv("ROMM_PLATFORM", "PLATFORM")) cfg.targetPlatformId = v;
+    if (const char *v = firstNonEmptyEnv("ROMM_DOWNLOAD_DIR", "DOWNLOAD_DIR")) cfg.downloadDir = v;
 
     if (const char *v = std::getenv("ROMM_MAX_CONCURRENT_DOWNLOADS")) {
         int parsed = 0;

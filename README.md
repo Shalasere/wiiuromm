@@ -95,6 +95,19 @@ Fast dev loops:
 ./scripts/dev-wii.sh    # build + run in Dolphin
 ```
 
+## Emulator Harness (Local Dev Loop)
+
+Shared control harness CLI (two backend adapters):
+
+```bash
+./scripts/romm-harness doctor
+./scripts/romm-harness run --backend wii-dolphin --scenario smoke_boot
+./scripts/romm-harness run --backend wiiu-cemu --scenario boot_menu
+```
+
+Session artifacts are written per run under `.harness/sessions/<timestamp>/`:
+`session.json`, `events.ndjson`, emulator logs, staged build, and screenshots.
+
 ## Control Conventions
 
 Shared schema now keeps controls consistent across targets:

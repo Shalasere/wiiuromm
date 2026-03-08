@@ -19,9 +19,50 @@ bool isRetryableHttpStatus(int code) {
     return code == 408 || code == 425 || code == 429 || (code >= 500 && code <= 599);
 }
 
+std::string base64Encode(const std::string &in) {
+    static const char kTable[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+    std::string out;
+    out.reserve(((in.size() + 2) / 3) * 4);
+    size_t i = 0;
+    while (i + 2 < in.size()) {
+        const unsigned int n =
+            (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16) |
+            (static_cast<unsigned int>(static_cast<unsigned char>(in[i + 1])) << 8) |
+            static_cast<unsigned int>(static_cast<unsigned char>(in[i + 2]));
+        out.push_back(kTable[(n >> 18) & 63]);
+        out.push_back(kTable[(n >> 12) & 63]);
+        out.push_back(kTable[(n >> 6) & 63]);
+        out.push_back(kTable[n & 63]);
+        i += 3;
+    }
+    const size_t rem = in.size() - i;
+    if (rem == 1) {
+        const unsigned int n =
+            (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16);
+        out.push_back(kTable[(n >> 18) & 63]);
+        out.push_back(kTable[(n >> 12) & 63]);
+        out.push_back('=');
+        out.push_back('=');
+    } else if (rem == 2) {
+        const unsigned int n =
+            (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16) |
+            (static_cast<unsigned int>(static_cast<unsigned char>(in[i + 1])) << 8);
+        out.push_back(kTable[(n >> 18) & 63]);
+        out.push_back(kTable[(n >> 12) & 63]);
+        out.push_back(kTable[(n >> 6) & 63]);
+        out.push_back('=');
+    }
+    return out;
+}
+
 HttpHeaders buildHeaders(const AppConfig &cfg) {
     HttpHeaders headers;
-    if (!cfg.authToken.empty()) headers.push_back({"Authorization", "Bearer " + cfg.authToken});
+    if (!cfg.authToken.empty()) {
+        headers.push_back({"Authorization", "Bearer " + cfg.authToken});
+    } else if (!cfg.username.empty() || !cfg.password.empty()) {
+        headers.push_back({"Authorization", "Basic " + base64Encode(cfg.username + ":" + cfg.password)});
+    }
     return headers;
 }
 

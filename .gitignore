@@ -14,5 +14,6 @@ build/
 
 # Local runtime artifacts
 run/
+.harness/
 logs/
 *.log

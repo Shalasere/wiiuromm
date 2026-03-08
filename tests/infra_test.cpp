@@ -35,7 +35,10 @@ void testConfigFileAndEnv() {
         out << "{\n"
             << "  \"schema_version\": 1,\n"
             << "  \"server_url\": \"http://127.0.0.1:8080\",\n"
+            << "  \"username\": \"dev\",\n"
+            << "  \"password\": \"devpass\",\n"
             << "  \"auth_token\": \"abc123\",\n"
+            << "  \"target_platform_id\": \"wii\",\n"
             << "  \"download_dir\": \"run/downloads\",\n"
             << "  \"fat32_safe\": true,\n"
             << "  \"max_concurrent_downloads\": 2\n"
@@ -47,14 +50,24 @@ void testConfigFileAndEnv() {
     requireTrue(romm::loadConfigFromFile(cfgPath.string(), cfg, err), "loadConfigFromFile should pass");
     requireTrue(cfg.fat32Safe, "fat32_safe should parse true");
     requireTrue(cfg.maxConcurrentDownloads == 2, "max concurrency should parse");
+    requireTrue(cfg.targetPlatformId == "wii", "target_platform_id should parse");
 
-    setenv("ROMM_SERVER_URL", "https://example.local", 1);
+    setenv("SERVER_URL", "https://games.fortkickass.tech", 1);
+    setenv("USERNAME", "root", 1);
+    setenv("PASSWORD", "Quicksilver0917!", 1);
+    setenv("PLATFORM", "wii", 1);
     setenv("ROMM_MAX_CONCURRENT_DOWNLOADS", "3", 1);
     requireTrue(romm::applyEnvOverrides(cfg, err), "applyEnvOverrides should pass");
-    requireTrue(cfg.serverUrl == "https://example.local", "server url env override should apply");
+    requireTrue(cfg.serverUrl == "https://games.fortkickass.tech", "server url env override should apply");
+    requireTrue(cfg.username == "root", "username env override should apply");
+    requireTrue(cfg.password == "Quicksilver0917!", "password env override should apply");
+    requireTrue(cfg.targetPlatformId == "wii", "platform env override should apply");
     requireTrue(cfg.maxConcurrentDownloads == 3, "concurrency env override should apply");
 
-    unsetenv("ROMM_SERVER_URL");
+    unsetenv("SERVER_URL");
+    unsetenv("USERNAME");
+    unsetenv("PASSWORD");
+    unsetenv("PLATFORM");
     unsetenv("ROMM_MAX_CONCURRENT_DOWNLOADS");
 }
 

@@ -10,6 +10,7 @@
 
 #include "romm/app_core.hpp"
 #include "romm/control_schema.hpp"
+#include "romm/logger.hpp"
 
 namespace {
 
@@ -31,7 +32,7 @@ romm::LogicalButton mapVpadButton(uint32_t trigger) {
 }
 
 void logStatus(const romm::Status &status) {
-    const std::vector<std::string> lines = romm::buildStatusLines(status, true);
+    const std::vector<std::string> lines = romm::buildFramedStatusLines(status, true);
     for (const auto &line : lines) {
         WHBLogPrintf("%s", line.c_str());
     }
@@ -45,6 +46,9 @@ int main(int argc, char **argv) {
 
     WHBProcInit();
     WHBLogConsoleInit();
+    romm::initLogFile();
+    romm::loadLogLevelFromEnv();
+    romm::logInfo("wiiu app launched", "APP");
 
     WHBLogPrintf("wiiuromm (Wii U target) - shared core state prototype");
     WHBLogPrintf("A=Select B=Back Y=Queue X=Start/Pause -=Search L/R=Updater/Diag +=Quit");
@@ -54,6 +58,7 @@ int main(int argc, char **argv) {
     logStatus(status);
 
     while (WHBProcIsRunning()) {
+        status.uiFrameCounter++;
         VPADStatus vpadStatus;
         VPADReadError readError;
         VPADRead(VPAD_CHAN_0, &vpadStatus, 1, &readError);
@@ -62,10 +67,18 @@ int main(int argc, char **argv) {
                 romm::ControlProfile::WiiU, mapVpadButton(vpadStatus.trigger));
             const romm::ApplyResult result = romm::applyAction(status, action);
             if (!result.keepRunning) {
+                romm::logInfo("quit requested", "APP");
                 break;
             }
+            if (action != romm::Action::None) {
+                romm::logDebug(
+                    "frame=" + std::to_string(status.uiFrameCounter) +
+                    " action=" + std::string(romm::actionName(action)) +
+                    " view=" + std::string(romm::viewName(status.currentView)) +
+                    " stateChanged=" + std::string(result.stateChanged ? "1" : "0"),
+                    "UI");
+            }
             if (action != romm::Action::None && result.stateChanged) {
-                WHBLogPrintf("[input] action=%s", romm::actionName(action));
                 logStatus(status);
             }
         }
@@ -77,6 +90,7 @@ int main(int argc, char **argv) {
         OSSleepTicks(OSMillisecondsToTicks(16));
     }
 
+    romm::shutdownLogFile();
     WHBLogConsoleFree();
     WHBProcShutdown();
     return 0;

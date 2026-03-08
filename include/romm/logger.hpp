@@ -1,0 +1,22 @@
+#pragma once
+
+#include <string>
+
+namespace romm {
+
+enum class LogLevel { Debug = 0, Info, Warn, Error };
+
+void initLogFile();
+void shutdownLogFile();
+void setLogLevel(LogLevel level);
+void setLogLevelFromString(const std::string &level);
+void loadLogLevelFromEnv();
+
+void logLine(const std::string &msg);
+void logDebug(const std::string &msg, const std::string &tag = "DBG");
+void logInfo(const std::string &msg, const std::string &tag = "APP");
+void logWarn(const std::string &msg, const std::string &tag = "APP");
+void logError(const std::string &msg, const std::string &tag = "APP");
+
+} // namespace romm
+

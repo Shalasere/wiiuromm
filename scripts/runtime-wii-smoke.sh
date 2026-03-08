@@ -47,8 +47,9 @@ if [[ "$HEADLESS" == "0" ]]; then
     echo "[fail] RUNTIME_HEADLESS=0 requires DISPLAY to be set." >&2
     exit 1
   fi
+  DOLPHIN_ENV=(env -u WAYLAND_DISPLAY -u WAYLAND_SOCKET QT_QPA_PLATFORM=xcb)
   echo "[run] Wii smoke via Dolphin (visible) for ${TIMEOUT_SECONDS}s"
-  RUNNER=("$DOLPHIN_BIN" --user "$USER_DIR" --exec "$BUILD_OUT")
+  RUNNER=("${DOLPHIN_ENV[@]}" "$DOLPHIN_BIN" --user "$USER_DIR" --exec "$BUILD_OUT")
 else
   echo "[run] Wii smoke via Dolphin (headless xvfb) for ${TIMEOUT_SECONDS}s"
   RUNNER=(xvfb-run -a "$DOLPHIN_BIN" --batch --user "$USER_DIR" --exec "$BUILD_OUT")

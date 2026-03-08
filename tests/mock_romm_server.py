@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 import argparse
+import base64
 import json
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from urllib.parse import parse_qs, urlparse
 
 TOKEN = "test-token"
+BASIC_USER = "root"
+BASIC_PASS = "Quicksilver0917!"
 
 PLATFORMS = [
-    {"id": "switch", "name": "Nintendo Switch"},
-    {"id": "wiiu", "name": "Wii U"},
+    {"id": 1, "slug": "switch", "name": "Nintendo Switch", "display_name": "Nintendo Switch"},
+    {"id": 2, "slug": "wiiu", "name": "Wii U", "display_name": "Wii U"},
+    {"id": 3, "slug": "wii", "name": "Wii", "display_name": "Wii"},
 ]
 
 ROMS = {
@@ -21,6 +25,10 @@ ROMS = {
         {"id": "wu_001", "title": "Mock Kart 8", "subtitle": "Nintendo", "size_mb": 64},
         {"id": "wu_002", "title": "Mock Xenoblade", "subtitle": "Monolith", "size_mb": 512},
     ],
+    "wii": [
+        {"id": "wi_001", "title": "Mock Galaxy 2", "subtitle": "Nintendo", "size_mb": 64},
+        {"id": "wi_002", "title": "Mock Prime Trilogy", "subtitle": "Retro", "size_mb": 512},
+    ],
 }
 
 FILES = {
@@ -29,9 +37,14 @@ FILES = {
     "sw_003": b"METROID-DATA-" * 150,
     "wu_001": b"KART-DATA-" * 210,
     "wu_002": b"XENO-DATA-" * 170,
+    "wi_001": b"GALAXY-DATA-" * 160,
+    "wi_002": b"PRIME-DATA-" * 190,
 }
 
-FAIL_COUNT = {"sw_002": 0}
+FAIL_COUNT = {"wi_002": 0}
+
+PLATFORM_ID_BY_SLUG = {p["slug"]: str(p["id"]) for p in PLATFORMS}
+PLATFORM_SLUG_BY_ID = {str(p["id"]): p["slug"] for p in PLATFORMS}
 
 
 def paginate(items, page, limit):
@@ -59,7 +72,10 @@ class Handler(BaseHTTPRequestHandler):
 
     def _require_auth(self):
         auth = self.headers.get("Authorization", "")
-        return auth == f"Bearer {TOKEN}"
+        if auth == f"Bearer {TOKEN}":
+            return True
+        expected = base64.b64encode(f"{BASIC_USER}:{BASIC_PASS}".encode("utf-8")).decode("ascii")
+        return auth == f"Basic {expected}"
 
     def do_GET(self):
         parsed = urlparse(self.path)
@@ -74,6 +90,10 @@ class Handler(BaseHTTPRequestHandler):
 
         if path == "/api/v1/preflight":
             self._write_json(200, {"ok": True, "user": "dev"})
+            return
+
+        if path == "/api/platforms":
+            self._write_json(200, PLATFORMS)
             return
 
         if path == "/api/v1/platforms":
@@ -107,14 +127,37 @@ class Handler(BaseHTTPRequestHandler):
             self._write_json(200, {"items": out, "next_page": next_page})
             return
 
+        if path == "/api/roms":
+            q = parse_qs(parsed.query)
+            platform_ref = q.get("platform_ids", [""])[0]
+            platform_slug = PLATFORM_SLUG_BY_ID.get(platform_ref, platform_ref)
+            roms = ROMS.get(platform_slug)
+            if roms is None:
+                self._write_json(404, {"error": "platform not found"})
+                return
+            limit = int(q.get("limit", ["32"])[0])
+            offset = int(q.get("offset", ["0"])[0])
+            page = (offset // max(1, limit)) + 1
+            items, next_page = paginate(roms, page, limit)
+            host = self.headers.get("Host", "127.0.0.1")
+            out = []
+            for it in items:
+                row = dict(it)
+                row["id"] = row["id"]
+                row["title"] = row["title"]
+                row["download_url"] = f"http://{host}/files/{it['id']}.bin"
+                out.append(row)
+            self._write_json(200, {"items": out, "next_page": next_page})
+            return
+
         if path.startswith("/files/") and path.endswith(".bin"):
             file_id = path.split("/")[-1].replace(".bin", "")
             data = FILES.get(file_id)
             if data is None:
                 self._write_json(404, {"error": "file not found"})
                 return
-            if file_id == "sw_002" and FAIL_COUNT["sw_002"] == 0:
-                FAIL_COUNT["sw_002"] += 1
+            if file_id == "wi_002" and FAIL_COUNT["wi_002"] == 0:
+                FAIL_COUNT["wi_002"] += 1
                 self._write_json(503, {"error": "temporary unavailable"})
                 return
             self.send_response(200)
