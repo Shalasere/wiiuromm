@@ -1,5 +1,7 @@
 # wiiuromm Port Plan (Initial)
 
+Primary operator handoff/runbook: [NEW_SYSTEM_HANDOFF.md](NEW_SYSTEM_HANDOFF.md)
+
 - Keep `switchromm` as reference only.
 - Shared core now started in `core/` with:
   - action/view state machine used by both Wii U and Wii targets

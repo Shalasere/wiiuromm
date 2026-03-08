@@ -4,6 +4,12 @@ New project scaffold for a RomM-style client targeting Wii U first, with a paral
 
 `switchromm` was left unchanged.
 
+## Start Here On A New System
+
+- [New System Handoff](docs/NEW_SYSTEM_HANDOFF.md)
+- [Port Plan](docs/PORT_PLAN.md)
+- [Wii Rendering Canonical Notes](docs/WII_RENDERING_CANONICAL.md)
+
 ## Targets
 
 - Native Wii U at repo root (`wut`, `.rpx`)
