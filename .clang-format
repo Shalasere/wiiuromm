@@ -1,0 +1,9 @@
+BasedOnStyle: LLVM
+IndentWidth: 4
+ContinuationIndentWidth: 4
+SortIncludes: false
+ColumnLimit: 0
+ReflowComments: false
+PointerAlignment: Left
+ReferenceAlignment: Left
+NamespaceIndentation: None

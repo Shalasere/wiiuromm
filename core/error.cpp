@@ -6,7 +6,7 @@
 namespace romm {
 namespace {
 
-std::string lowerCopy(const std::string &s) {
+std::string lowerCopy(const std::string& s) {
     std::string out = s;
     std::transform(out.begin(), out.end(), out.begin(), [](unsigned char c) {
         return static_cast<char>(std::tolower(c));
@@ -14,16 +14,15 @@ std::string lowerCopy(const std::string &s) {
     return out;
 }
 
-bool contains(const std::string &haystack, const std::string &needle) {
+bool contains(const std::string& haystack, const std::string& needle) {
     return haystack.find(needle) != std::string::npos;
 }
 
 } // namespace
 
-ErrorInfo classifyHttpStatus(int statusCode, const std::string &statusText) {
+ErrorInfo classifyHttpStatus(int statusCode, const std::string& statusText) {
     ErrorInfo info;
-    info.detail = "HTTP " + std::to_string(statusCode) +
-                  (statusText.empty() ? "" : (" " + statusText));
+    info.detail = "HTTP " + std::to_string(statusCode) + (statusText.empty() ? "" : (" " + statusText));
 
     if (statusCode >= 200 && statusCode < 300) {
         info.kind = ErrorKind::None;
@@ -55,25 +54,22 @@ ErrorInfo classifyHttpStatus(int statusCode, const std::string &statusText) {
     return info;
 }
 
-ErrorInfo classifyErrorText(const std::string &detail) {
+ErrorInfo classifyErrorText(const std::string& detail) {
     const std::string lower = lowerCopy(detail);
     ErrorInfo info;
     info.detail = detail;
 
-    if (contains(lower, "timeout") || contains(lower, "connection") ||
-        contains(lower, "dns") || contains(lower, "refused")) {
+    if (contains(lower, "timeout") || contains(lower, "connection") || contains(lower, "dns") || contains(lower, "refused")) {
         info.kind = ErrorKind::Network;
         info.userMessage = "Network error. Check connectivity.";
         return info;
     }
-    if (contains(lower, "auth") || contains(lower, "unauthorized") ||
-        contains(lower, "forbidden") || contains(lower, "token")) {
+    if (contains(lower, "auth") || contains(lower, "unauthorized") || contains(lower, "forbidden") || contains(lower, "token")) {
         info.kind = ErrorKind::Auth;
         info.userMessage = "Authentication error.";
         return info;
     }
-    if (contains(lower, "permission") || contains(lower, "read-only") ||
-        contains(lower, "no space") || contains(lower, "disk")) {
+    if (contains(lower, "permission") || contains(lower, "read-only") || contains(lower, "no space") || contains(lower, "disk")) {
         info.kind = ErrorKind::Filesystem;
         info.userMessage = "Storage/filesystem error.";
         return info;
@@ -88,17 +84,23 @@ ErrorInfo classifyErrorText(const std::string &detail) {
     return info;
 }
 
-const char *errorKindName(ErrorKind kind) {
+const char* errorKindName(ErrorKind kind) {
     switch (kind) {
-        case ErrorKind::None: return "None";
-        case ErrorKind::Network: return "Network";
-        case ErrorKind::Auth: return "Auth";
-        case ErrorKind::Http: return "Http";
-        case ErrorKind::Filesystem: return "Filesystem";
-        case ErrorKind::Parse: return "Parse";
-        case ErrorKind::Unknown:
-        default:
-            return "Unknown";
+    case ErrorKind::None:
+        return "None";
+    case ErrorKind::Network:
+        return "Network";
+    case ErrorKind::Auth:
+        return "Auth";
+    case ErrorKind::Http:
+        return "Http";
+    case ErrorKind::Filesystem:
+        return "Filesystem";
+    case ErrorKind::Parse:
+        return "Parse";
+    case ErrorKind::Unknown:
+    default:
+        return "Unknown";
     }
 }
 

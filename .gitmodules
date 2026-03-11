@@ -1,0 +1,3 @@
+[submodule "external/libwiigui"]
+	path = external/libwiigui
+	url = https://github.com/dborth/libwiigui

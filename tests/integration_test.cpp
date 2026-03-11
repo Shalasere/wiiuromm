@@ -19,25 +19,27 @@
 namespace {
 namespace fs = std::filesystem;
 
-void requireTrue(bool cond, const char *msg) {
+void requireTrue(bool cond, const char* msg) {
     if (!cond) {
         std::cerr << "FAILED: " << msg << "\n";
         std::exit(1);
     }
 }
 
-std::string shellEscape(const std::string &s) {
+std::string shellEscape(const std::string& s) {
     std::string out = "'";
     for (char c : s) {
-        if (c == '\'') out += "'\\''";
-        else out.push_back(c);
+        if (c == '\'')
+            out += "'\\''";
+        else
+            out.push_back(c);
     }
     out += "'";
     return out;
 }
 
-bool runCapture(const std::string &cmd, std::string &out, int &exitCode) {
-    FILE *pipe = popen(cmd.c_str(), "r");
+bool runCapture(const std::string& cmd, std::string& out, int& exitCode) {
+    FILE* pipe = popen(cmd.c_str(), "r");
     if (pipe == nullptr) {
         out.clear();
         exitCode = 127;
@@ -47,10 +49,13 @@ bool runCapture(const std::string &cmd, std::string &out, int &exitCode) {
     out.clear();
     while (true) {
         const size_t n = std::fread(buf.data(), 1, buf.size(), pipe);
-        if (n > 0) out.append(buf.data(), n);
+        if (n > 0)
+            out.append(buf.data(), n);
         if (n < buf.size()) {
-            if (std::feof(pipe)) break;
-            if (std::ferror(pipe)) break;
+            if (std::feof(pipe))
+                break;
+            if (std::ferror(pipe))
+                break;
         }
     }
     const int rc = pclose(pipe);
@@ -58,10 +63,11 @@ bool runCapture(const std::string &cmd, std::string &out, int &exitCode) {
     return rc == 0;
 }
 
-bool parseStatusSuffix(const std::string &payload, std::string &body, int &statusCode) {
+bool parseStatusSuffix(const std::string& payload, std::string& body, int& statusCode) {
     const std::string marker = "\n__STATUS__:";
     const size_t pos = payload.rfind(marker);
-    if (pos == std::string::npos) return false;
+    if (pos == std::string::npos)
+        return false;
     body = payload.substr(0, pos);
     const std::string sc = payload.substr(pos + marker.size());
     statusCode = std::atoi(sc.c_str());
@@ -69,11 +75,11 @@ bool parseStatusSuffix(const std::string &payload, std::string &body, int &statu
 }
 
 class CurlHttpClient final : public romm::IHttpClient {
-public:
-    bool get(const std::string &url, const romm::HttpHeaders &headers,
-             romm::HttpResponse &out, std::string &outError) override {
+  public:
+    bool get(const std::string& url, const romm::HttpHeaders& headers,
+             romm::HttpResponse& out, std::string& outError) override {
         std::string cmd = "curl -sS -L";
-        for (const auto &h : headers) {
+        for (const auto& h : headers) {
             cmd += " -H " + shellEscape(h.first + ": " + h.second);
         }
         cmd += " -w " + shellEscape("\n__STATUS__:%{http_code}") + " " + shellEscape(url);
@@ -97,17 +103,18 @@ public:
         return true;
     }
 
-    bool streamGet(const std::string &url, const romm::HttpHeaders &headers,
-                   int &outStatusCode,
-                   const std::function<bool(const uint8_t *, size_t)> &onChunk,
-                   std::string &outError) override {
+    bool streamGet(const std::string& url, const romm::HttpHeaders& headers,
+                   int& outStatusCode,
+                   const std::function<bool(const uint8_t*, size_t)>& onChunk,
+                   std::string& outError) override {
         romm::HttpResponse resp;
-        if (!get(url, headers, resp, outError)) return false;
+        if (!get(url, headers, resp, outError))
+            return false;
         outStatusCode = resp.statusCode;
         const size_t chunk = 1024;
         for (size_t i = 0; i < resp.body.size(); i += chunk) {
             const size_t n = std::min(chunk, resp.body.size() - i);
-            const auto *ptr = reinterpret_cast<const uint8_t *>(resp.body.data() + i);
+            const auto* ptr = reinterpret_cast<const uint8_t*>(resp.body.data() + i);
             if (!onChunk(ptr, n)) {
                 outError = "stream callback aborted";
                 return false;
@@ -118,20 +125,20 @@ public:
 };
 
 class Observer final : public romm::IDownloadObserver {
-public:
+  public:
     int progressEvents{0};
     int completed{0};
     int failures{0};
 
-    void onProgress(const romm::DownloadProgress &progress) override {
+    void onProgress(const romm::DownloadProgress& progress) override {
         (void)progress;
         progressEvents++;
     }
-    void onComplete(const romm::DownloadRequest &request) override {
+    void onComplete(const romm::DownloadRequest& request) override {
         (void)request;
         completed++;
     }
-    void onFailure(const romm::DownloadRequest &request, const romm::ErrorInfo &error) override {
+    void onFailure(const romm::DownloadRequest& request, const romm::ErrorInfo& error) override {
         (void)request;
         (void)error;
         failures++;
@@ -141,7 +148,7 @@ public:
 } // namespace
 
 int main() {
-    const char *base = std::getenv("MOCK_BASE_URL");
+    const char* base = std::getenv("MOCK_BASE_URL");
     requireTrue(base != nullptr && std::string(base).size() > 0, "MOCK_BASE_URL must be set");
     const bool liveSmokeOnly = (std::getenv("LIVE_SMOKE_ONLY") != nullptr);
 
@@ -193,7 +200,7 @@ int main() {
     std::vector<romm::DownloadRequest> queue;
     cfg.maxDownloadRetries = 2;
     cfg.retryBackoffMs = 1;
-    for (const auto &rom : status.platforms[0].roms) {
+    for (const auto& rom : status.platforms[0].roms) {
         if (rom.id == "wi_001" || rom.id == "wi_002") {
             romm::DownloadRequest req;
             req.id = rom.id;
@@ -211,7 +218,7 @@ int main() {
     requireTrue(obs.failures == 0, "no download failures expected");
     requireTrue(obs.completed == 2, "two downloads should complete");
     requireTrue(obs.progressEvents > 0, "progress callback should fire");
-    for (const auto &q : queue) {
+    for (const auto& q : queue) {
         requireTrue(fs::exists(q.outputPath), "output file should exist");
         requireTrue(fs::file_size(q.outputPath) > 0, "output file should have content");
     }

@@ -25,15 +25,15 @@ struct DownloadProgress {
 };
 
 class IDownloadObserver {
-public:
+  public:
     virtual ~IDownloadObserver() = default;
-    virtual void onProgress(const DownloadProgress &progress) = 0;
-    virtual void onComplete(const DownloadRequest &request) = 0;
-    virtual void onFailure(const DownloadRequest &request, const ErrorInfo &error) = 0;
+    virtual void onProgress(const DownloadProgress& progress) = 0;
+    virtual void onComplete(const DownloadRequest& request) = 0;
+    virtual void onFailure(const DownloadRequest& request, const ErrorInfo& error) = 0;
 };
 
-bool runDownloadQueue(const AppConfig &cfg, IHttpClient &client,
-                      const std::vector<DownloadRequest> &queue,
-                      IDownloadObserver &observer, std::string &outError);
+bool runDownloadQueue(const AppConfig& cfg, IHttpClient& client,
+                      const std::vector<DownloadRequest>& queue,
+                      IDownloadObserver& observer, std::string& outError);
 
 } // namespace romm

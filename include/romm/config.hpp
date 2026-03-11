@@ -19,8 +19,8 @@ struct AppConfig {
 };
 
 AppConfig defaultConfig();
-bool loadConfigFromFile(const std::string &path, AppConfig &out, std::string &outError);
-bool applyEnvOverrides(AppConfig &cfg, std::string &outError);
-bool validateConfig(const AppConfig &cfg, std::string &outError);
+bool loadConfigFromFile(const std::string& path, AppConfig& out, std::string& outError);
+bool applyEnvOverrides(AppConfig& cfg, std::string& outError);
+bool validateConfig(const AppConfig& cfg, std::string& outError);
 
 } // namespace romm

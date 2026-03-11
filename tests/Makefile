@@ -8,7 +8,8 @@ all: core_state_test infra_test integration_test wii_control_harness_test
 
 COMMON_CORE := ../core/app_core.cpp ../core/control_schema.cpp ../core/config.cpp \
                ../core/error.cpp ../core/persistence.cpp ../core/http_client.cpp \
-               ../core/session.cpp ../core/api_client.cpp ../core/downloader.cpp
+               ../core/session.cpp ../core/api_client.cpp ../core/downloader.cpp \
+               ../core/runtime_sync.cpp
 
 core_state_test: core_state_test.cpp $(COMMON_CORE)
 	$(CXX) $(CPPFLAGS) $(CXXFLAGS) $^ -o $@

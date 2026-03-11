@@ -10,39 +10,44 @@
 namespace romm {
 namespace {
 
-std::string trim(const std::string &s) {
+std::string trim(const std::string& s) {
     size_t begin = 0;
-    while (begin < s.size() && std::isspace(static_cast<unsigned char>(s[begin]))) begin++;
+    while (begin < s.size() && std::isspace(static_cast<unsigned char>(s[begin])))
+        begin++;
     size_t end = s.size();
-    while (end > begin && std::isspace(static_cast<unsigned char>(s[end - 1]))) end--;
+    while (end > begin && std::isspace(static_cast<unsigned char>(s[end - 1])))
+        end--;
     return s.substr(begin, end - begin);
 }
 
-bool extractStringField(const std::string &src, const char *key, std::string &out) {
+bool extractStringField(const std::string& src, const char* key, std::string& out) {
     const std::regex re(std::string("\"") + key + "\"\\s*:\\s*\"([^\"]*)\"");
     std::smatch m;
-    if (!std::regex_search(src, m, re)) return false;
+    if (!std::regex_search(src, m, re))
+        return false;
     out = m[1].str();
     return true;
 }
 
-bool extractIntField(const std::string &src, const char *key, int &out) {
+bool extractIntField(const std::string& src, const char* key, int& out) {
     const std::regex re(std::string("\"") + key + "\"\\s*:\\s*(-?[0-9]+)");
     std::smatch m;
-    if (!std::regex_search(src, m, re)) return false;
+    if (!std::regex_search(src, m, re))
+        return false;
     out = std::stoi(m[1].str());
     return true;
 }
 
-bool extractBoolField(const std::string &src, const char *key, bool &out) {
+bool extractBoolField(const std::string& src, const char* key, bool& out) {
     const std::regex re(std::string("\"") + key + "\"\\s*:\\s*(true|false)");
     std::smatch m;
-    if (!std::regex_search(src, m, re)) return false;
+    if (!std::regex_search(src, m, re))
+        return false;
     out = (m[1].str() == "true");
     return true;
 }
 
-bool parseBoolString(const std::string &raw, bool &out) {
+bool parseBoolString(const std::string& raw, bool& out) {
     const std::string v = trim(raw);
     if (v == "1" || v == "true" || v == "TRUE" || v == "yes" || v == "on") {
         out = true;
@@ -55,20 +60,24 @@ bool parseBoolString(const std::string &raw, bool &out) {
     return false;
 }
 
-bool parseIntStrict(const char *text, int &out) {
-    if (text == nullptr || *text == '\0') return false;
+bool parseIntStrict(const char* text, int& out) {
+    if (text == nullptr || *text == '\0')
+        return false;
     errno = 0;
-    char *end = nullptr;
+    char* end = nullptr;
     long v = std::strtol(text, &end, 10);
-    if (errno != 0 || end == text || *end != '\0') return false;
-    if (v < -2147483647L - 1L || v > 2147483647L) return false;
+    if (errno != 0 || end == text || *end != '\0')
+        return false;
+    if (v < -2147483647L - 1L || v > 2147483647L)
+        return false;
     out = static_cast<int>(v);
     return true;
 }
 
-const char *firstNonEmptyEnv(const char *primary, const char *fallback) {
-    const char *v = std::getenv(primary);
-    if (v != nullptr && *v != '\0') return v;
+const char* firstNonEmptyEnv(const char* primary, const char* fallback) {
+    const char* v = std::getenv(primary);
+    if (v != nullptr && *v != '\0')
+        return v;
     return std::getenv(fallback);
 }
 
@@ -78,7 +87,7 @@ AppConfig defaultConfig() {
     return AppConfig{};
 }
 
-bool validateConfig(const AppConfig &cfg, std::string &outError) {
+bool validateConfig(const AppConfig& cfg, std::string& outError) {
     if (cfg.schemaVersion <= 0) {
         outError = "schema_version must be positive";
         return false;
@@ -111,7 +120,7 @@ bool validateConfig(const AppConfig &cfg, std::string &outError) {
     return true;
 }
 
-bool loadConfigFromFile(const std::string &path, AppConfig &out, std::string &outError) {
+bool loadConfigFromFile(const std::string& path, AppConfig& out, std::string& outError) {
     out = defaultConfig();
 
     std::ifstream in(path);
@@ -143,19 +152,26 @@ bool loadConfigFromFile(const std::string &path, AppConfig &out, std::string &ou
     (void)extractIntField(body, "max_download_retries", out.maxDownloadRetries);
     (void)extractIntField(body, "retry_backoff_ms", out.retryBackoffMs);
 
-    if (!validateConfig(out, outError)) return false;
+    if (!validateConfig(out, outError))
+        return false;
     return true;
 }
 
-bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
-    if (const char *v = firstNonEmptyEnv("ROMM_SERVER_URL", "SERVER_URL")) cfg.serverUrl = v;
-    if (const char *v = firstNonEmptyEnv("ROMM_USERNAME", "USERNAME")) cfg.username = v;
-    if (const char *v = firstNonEmptyEnv("ROMM_PASSWORD", "PASSWORD")) cfg.password = v;
-    if (const char *v = firstNonEmptyEnv("ROMM_AUTH_TOKEN", "API_TOKEN")) cfg.authToken = v;
-    if (const char *v = firstNonEmptyEnv("ROMM_PLATFORM", "PLATFORM")) cfg.targetPlatformId = v;
-    if (const char *v = firstNonEmptyEnv("ROMM_DOWNLOAD_DIR", "DOWNLOAD_DIR")) cfg.downloadDir = v;
+bool applyEnvOverrides(AppConfig& cfg, std::string& outError) {
+    if (const char* v = firstNonEmptyEnv("ROMM_SERVER_URL", "SERVER_URL"))
+        cfg.serverUrl = v;
+    if (const char* v = firstNonEmptyEnv("ROMM_USERNAME", "USERNAME"))
+        cfg.username = v;
+    if (const char* v = firstNonEmptyEnv("ROMM_PASSWORD", "PASSWORD"))
+        cfg.password = v;
+    if (const char* v = firstNonEmptyEnv("ROMM_AUTH_TOKEN", "API_TOKEN"))
+        cfg.authToken = v;
+    if (const char* v = firstNonEmptyEnv("ROMM_PLATFORM", "PLATFORM"))
+        cfg.targetPlatformId = v;
+    if (const char* v = firstNonEmptyEnv("ROMM_DOWNLOAD_DIR", "DOWNLOAD_DIR"))
+        cfg.downloadDir = v;
 
-    if (const char *v = std::getenv("ROMM_MAX_CONCURRENT_DOWNLOADS")) {
+    if (const char* v = std::getenv("ROMM_MAX_CONCURRENT_DOWNLOADS")) {
         int parsed = 0;
         if (!parseIntStrict(v, parsed)) {
             outError = "invalid ROMM_MAX_CONCURRENT_DOWNLOADS";
@@ -164,7 +180,7 @@ bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
         cfg.maxConcurrentDownloads = parsed;
     }
 
-    if (const char *v = std::getenv("ROMM_MAX_DOWNLOAD_RETRIES")) {
+    if (const char* v = std::getenv("ROMM_MAX_DOWNLOAD_RETRIES")) {
         int parsed = 0;
         if (!parseIntStrict(v, parsed)) {
             outError = "invalid ROMM_MAX_DOWNLOAD_RETRIES";
@@ -173,7 +189,7 @@ bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
         cfg.maxDownloadRetries = parsed;
     }
 
-    if (const char *v = std::getenv("ROMM_RETRY_BACKOFF_MS")) {
+    if (const char* v = std::getenv("ROMM_RETRY_BACKOFF_MS")) {
         int parsed = 0;
         if (!parseIntStrict(v, parsed)) {
             outError = "invalid ROMM_RETRY_BACKOFF_MS";
@@ -182,7 +198,7 @@ bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
         cfg.retryBackoffMs = parsed;
     }
 
-    if (const char *v = std::getenv("ROMM_FAT32_SAFE")) {
+    if (const char* v = std::getenv("ROMM_FAT32_SAFE")) {
         bool b = false;
         if (!parseBoolString(v, b)) {
             outError = "invalid ROMM_FAT32_SAFE";
@@ -191,7 +207,8 @@ bool applyEnvOverrides(AppConfig &cfg, std::string &outError) {
         cfg.fat32Safe = b;
     }
 
-    if (!validateConfig(cfg, outError)) return false;
+    if (!validateConfig(cfg, outError))
+        return false;
     return true;
 }
 

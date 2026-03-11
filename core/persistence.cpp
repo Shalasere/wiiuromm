@@ -11,33 +11,44 @@ namespace romm {
 namespace {
 namespace fs = std::filesystem;
 
-bool parseQueueState(int raw, QueueState &out) {
+bool parseQueueState(int raw, QueueState& out) {
     switch (raw) {
-        case 0: out = QueueState::Pending; return true;
-        case 1: out = QueueState::Downloading; return true;
-        case 2: out = QueueState::Completed; return true;
-        case 3: out = QueueState::Failed; return true;
-        default: return false;
+    case 0:
+        out = QueueState::Pending;
+        return true;
+    case 1:
+        out = QueueState::Downloading;
+        return true;
+    case 2:
+        out = QueueState::Completed;
+        return true;
+    case 3:
+        out = QueueState::Failed;
+        return true;
+    default:
+        return false;
     }
 }
 
-bool parseU64Strict(const std::string &text, uint64_t &out) {
-    if (text.empty()) return false;
+bool parseU64Strict(const std::string& text, uint64_t& out) {
+    if (text.empty())
+        return false;
     errno = 0;
-    char *end = nullptr;
+    char* end = nullptr;
     unsigned long long v = std::strtoull(text.c_str(), &end, 10);
-    if (errno != 0 || end == text.c_str() || *end != '\0') return false;
+    if (errno != 0 || end == text.c_str() || *end != '\0')
+        return false;
     out = static_cast<uint64_t>(v);
     return true;
 }
 
-std::string manifestFileForRom(const std::string &dir, const std::string &romId) {
+std::string manifestFileForRom(const std::string& dir, const std::string& romId) {
     return (fs::path(dir) / (romId + ".manifest")).string();
 }
 
 } // namespace
 
-bool saveQueueState(const Status &status, const std::string &path, std::string &outError) {
+bool saveQueueState(const Status& status, const std::string& path, std::string& outError) {
     const fs::path parent = fs::path(path).parent_path();
     if (!parent.empty()) {
         std::error_code ec;
@@ -55,7 +66,7 @@ bool saveQueueState(const Status &status, const std::string &path, std::string &
     }
 
     out << "version=1\n";
-    for (const auto &q : status.downloadQueue) {
+    for (const auto& q : status.downloadQueue) {
         out << "Q\t"
             << std::quoted(q.rom.id) << "\t"
             << std::quoted(q.rom.title) << "\t"
@@ -69,7 +80,7 @@ bool saveQueueState(const Status &status, const std::string &path, std::string &
     return true;
 }
 
-bool loadQueueState(Status &status, const std::string &path, std::string &outError) {
+bool loadQueueState(Status& status, const std::string& path, std::string& outError) {
     std::ifstream in(path);
     if (!in.is_open()) {
         outError = "failed to open queue state file: " + path;
@@ -78,9 +89,12 @@ bool loadQueueState(Status &status, const std::string &path, std::string &outErr
 
     std::string line;
     while (std::getline(in, line)) {
-        if (line.empty() || line[0] == '#') continue;
-        if (line.rfind("version=", 0) == 0) continue;
-        if (line.rfind("Q\t", 0) != 0) continue;
+        if (line.empty() || line[0] == '#')
+            continue;
+        if (line.rfind("version=", 0) == 0)
+            continue;
+        if (line.rfind("Q\t", 0) != 0)
+            continue;
 
         std::istringstream row(line.substr(2));
         QueueItem item;
@@ -89,14 +103,7 @@ bool loadQueueState(Status &status, const std::string &path, std::string &outErr
         int progress = 0;
         int attempts = 0;
 
-        row >> std::quoted(item.rom.id)
-            >> std::quoted(item.rom.title)
-            >> std::quoted(item.rom.subtitle)
-            >> sizeMb
-            >> rawState
-            >> progress
-            >> attempts
-            >> std::quoted(item.error);
+        row >> std::quoted(item.rom.id) >> std::quoted(item.rom.title) >> std::quoted(item.rom.subtitle) >> sizeMb >> rawState >> progress >> attempts >> std::quoted(item.error);
         if (row.fail()) {
             outError = "malformed queue row";
             return false;
@@ -111,13 +118,16 @@ bool loadQueueState(Status &status, const std::string &path, std::string &outErr
         item.attempts = static_cast<uint8_t>(std::clamp(attempts, 0, 255));
 
         bool duplicate = false;
-        for (const auto &q : status.downloadQueue) {
-            if (q.rom.id == item.rom.id) duplicate = true;
+        for (const auto& q : status.downloadQueue) {
+            if (q.rom.id == item.rom.id)
+                duplicate = true;
         }
-        for (const auto &h : status.downloadHistory) {
-            if (h.rom.id == item.rom.id && h.state == QueueState::Completed) duplicate = true;
+        for (const auto& h : status.downloadHistory) {
+            if (h.rom.id == item.rom.id && h.state == QueueState::Completed)
+                duplicate = true;
         }
-        if (!duplicate) status.downloadQueue.push_back(item);
+        if (!duplicate)
+            status.downloadQueue.push_back(item);
     }
 
     if (!status.downloadQueue.empty()) {
@@ -129,8 +139,8 @@ bool loadQueueState(Status &status, const std::string &path, std::string &outErr
     return true;
 }
 
-bool writeCompletedManifest(const QueueItem &item, const std::string &manifestDir,
-                            std::string &outPath, std::string &outError) {
+bool writeCompletedManifest(const QueueItem& item, const std::string& manifestDir,
+                            std::string& outPath, std::string& outError) {
     if (item.rom.id.empty()) {
         outError = "manifest write requires rom id";
         return false;
@@ -159,21 +169,24 @@ bool writeCompletedManifest(const QueueItem &item, const std::string &manifestDi
     return true;
 }
 
-bool loadCompletedManifests(Status &status, const std::string &manifestDir, std::string &outError) {
+bool loadCompletedManifests(Status& status, const std::string& manifestDir, std::string& outError) {
     std::error_code ec;
-    if (!fs::exists(manifestDir, ec)) return true;
+    if (!fs::exists(manifestDir, ec))
+        return true;
     if (ec) {
         outError = "failed to inspect manifest dir: " + ec.message();
         return false;
     }
 
-    for (const auto &entry : fs::directory_iterator(manifestDir, ec)) {
+    for (const auto& entry : fs::directory_iterator(manifestDir, ec)) {
         if (ec) {
             outError = "failed to iterate manifest dir: " + ec.message();
             return false;
         }
-        if (!entry.is_regular_file()) continue;
-        if (entry.path().extension() != ".manifest") continue;
+        if (!entry.is_regular_file())
+            continue;
+        if (entry.path().extension() != ".manifest")
+            continue;
 
         std::ifstream in(entry.path());
         if (!in.is_open()) {
@@ -188,12 +201,16 @@ bool loadCompletedManifests(Status &status, const std::string &manifestDir, std:
         std::string line;
         while (std::getline(in, line)) {
             const size_t eq = line.find('=');
-            if (eq == std::string::npos) continue;
+            if (eq == std::string::npos)
+                continue;
             const std::string key = line.substr(0, eq);
             const std::string val = line.substr(eq + 1);
-            if (key == "id") item.rom.id = val;
-            else if (key == "title") item.rom.title = val;
-            else if (key == "subtitle") item.rom.subtitle = val;
+            if (key == "id")
+                item.rom.id = val;
+            else if (key == "title")
+                item.rom.title = val;
+            else if (key == "subtitle")
+                item.rom.subtitle = val;
             else if (key == "size_mb") {
                 uint64_t parsed = 0;
                 if (!parseU64Strict(val, parsed)) {
@@ -204,52 +221,60 @@ bool loadCompletedManifests(Status &status, const std::string &manifestDir, std:
             }
         }
 
-        if (item.rom.id.empty()) continue;
+        if (item.rom.id.empty())
+            continue;
         bool duplicate = false;
-        for (const auto &h : status.downloadHistory) {
-            if (h.rom.id == item.rom.id) duplicate = true;
+        for (const auto& h : status.downloadHistory) {
+            if (h.rom.id == item.rom.id)
+                duplicate = true;
         }
-        if (!duplicate) status.downloadHistory.push_back(item);
+        if (!duplicate)
+            status.downloadHistory.push_back(item);
     }
     return true;
 }
 
-std::vector<PartialChunk> detectPartChunks(const std::string &dir, const std::string &baseName,
-                                           std::string &outError) {
+std::vector<PartialChunk> detectPartChunks(const std::string& dir, const std::string& baseName,
+                                           std::string& outError) {
     std::vector<PartialChunk> out;
     const fs::path root(dir);
     std::error_code ec;
-    if (!fs::exists(root, ec)) return out;
+    if (!fs::exists(root, ec))
+        return out;
     if (ec) {
         outError = "failed to inspect part chunk dir: " + ec.message();
         return out;
     }
 
     const std::string prefix = baseName + ".part.";
-    for (const auto &entry : fs::directory_iterator(root, ec)) {
+    for (const auto& entry : fs::directory_iterator(root, ec)) {
         if (ec) {
             outError = "failed to scan part chunks: " + ec.message();
             out.clear();
             return out;
         }
-        if (!entry.is_regular_file()) continue;
+        if (!entry.is_regular_file())
+            continue;
         const std::string name = entry.path().filename().string();
-        if (name.rfind(prefix, 0) != 0) continue;
+        if (name.rfind(prefix, 0) != 0)
+            continue;
 
         const std::string offStr = name.substr(prefix.size());
         uint64_t offset = 0;
-        if (!parseU64Strict(offStr, offset)) continue;
+        if (!parseU64Strict(offStr, offset))
+            continue;
 
         PartialChunk c;
         c.offset = offset;
         c.size = static_cast<uint64_t>(fs::file_size(entry.path(), ec));
-        if (ec) continue;
+        if (ec)
+            continue;
         out.push_back(c);
     }
     return out;
 }
 
-ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk> &chunks) {
+ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk>& chunks) {
     ResumeDecision d;
     if (chunks.empty()) {
         d.mode = ResumeMode::StartFresh;
@@ -258,8 +283,9 @@ ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk
     }
 
     std::vector<PartialChunk> sorted = chunks;
-    std::sort(sorted.begin(), sorted.end(), [](const PartialChunk &a, const PartialChunk &b) {
-        if (a.offset == b.offset) return a.size > b.size;
+    std::sort(sorted.begin(), sorted.end(), [](const PartialChunk& a, const PartialChunk& b) {
+        if (a.offset == b.offset)
+            return a.size > b.size;
         return a.offset < b.offset;
     });
 
@@ -270,14 +296,15 @@ ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk
     }
 
     uint64_t contiguous = 0;
-    for (const auto &c : sorted) {
+    for (const auto& c : sorted) {
         if (c.offset > contiguous) {
             d.mode = ResumeMode::RestartDueToGap;
             d.reason = "Gap detected in part chunks.";
             return d;
         }
         const uint64_t end = c.offset + c.size;
-        if (end > contiguous) contiguous = end;
+        if (end > contiguous)
+            contiguous = end;
     }
 
     d.mode = ResumeMode::ResumeFromPartial;
@@ -286,12 +313,16 @@ ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk
     return d;
 }
 
-const char *resumeModeName(ResumeMode mode) {
+const char* resumeModeName(ResumeMode mode) {
     switch (mode) {
-        case ResumeMode::StartFresh: return "StartFresh";
-        case ResumeMode::ResumeFromPartial: return "ResumeFromPartial";
-        case ResumeMode::RestartDueToGap: return "RestartDueToGap";
-        default: return "Unknown";
+    case ResumeMode::StartFresh:
+        return "StartFresh";
+    case ResumeMode::ResumeFromPartial:
+        return "ResumeFromPartial";
+    case ResumeMode::RestartDueToGap:
+        return "RestartDueToGap";
+    default:
+        return "Unknown";
     }
 }
 

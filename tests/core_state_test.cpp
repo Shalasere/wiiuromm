@@ -8,14 +8,14 @@
 
 namespace {
 
-void requireTrue(bool cond, const char *msg) {
+void requireTrue(bool cond, const char* msg) {
     if (!cond) {
         std::cerr << "FAILED: " << msg << "\n";
         std::exit(1);
     }
 }
 
-void requireActionEq(romm::Action actual, romm::Action expected, const char *msg) {
+void requireActionEq(romm::Action actual, romm::Action expected, const char* msg) {
     if (actual != expected) {
         std::cerr << "FAILED: " << msg
                   << " expected=" << romm::actionName(expected)
@@ -24,20 +24,21 @@ void requireActionEq(romm::Action actual, romm::Action expected, const char *msg
     }
 }
 
-bool hasLineWithPrefix(const std::vector<std::string> &lines, const std::string &prefix) {
-    for (const auto &line : lines) {
-        if (line.rfind(prefix, 0) == 0) return true;
+bool hasLineWithPrefix(const std::vector<std::string>& lines, const std::string& prefix) {
+    for (const auto& line : lines) {
+        if (line.rfind(prefix, 0) == 0)
+            return true;
     }
     return false;
 }
 
-void goToRoms(romm::Status &status) {
+void goToRoms(romm::Status& status) {
     auto res = romm::applyAction(status, romm::Action::Select);
     requireTrue(res.keepRunning, "Select PLATFORMS should keep running");
     requireTrue(status.currentView == romm::Status::View::ROMS, "Select PLATFORMS should open ROMS");
 }
 
-void goToDetailAndQueueFirst(romm::Status &status) {
+void goToDetailAndQueueFirst(romm::Status& status) {
     goToRoms(status);
     auto res = romm::applyAction(status, romm::Action::Select);
     requireTrue(res.keepRunning, "Select ROMS should keep running");
@@ -47,7 +48,7 @@ void goToDetailAndQueueFirst(romm::Status &status) {
     requireTrue(status.currentView == romm::Status::View::QUEUE, "Select DETAIL should open QUEUE");
 }
 
-void tickUntilIdle(romm::Status &status, int maxTicks = 600) {
+void tickUntilIdle(romm::Status& status, int maxTicks = 600) {
     for (int i = 0; i < maxTicks && status.downloadWorkerRunning; ++i) {
         (void)romm::tickDownload(status, 16);
     }
@@ -158,7 +159,7 @@ void testQueueRemoveAndClear() {
     requireTrue(res.keepRunning, "back should keep running");
     res = romm::applyAction(status, romm::Action::Back); // roms
     requireTrue(res.keepRunning, "back should keep running");
-    (void)romm::applyAction(status, romm::Action::Down); // next rom
+    (void)romm::applyAction(status, romm::Action::Down);   // next rom
     (void)romm::applyAction(status, romm::Action::Select); // detail
     (void)romm::applyAction(status, romm::Action::Select); // enqueue
     requireTrue(status.downloadQueue.size() == 2, "queue should have two items");
@@ -174,8 +175,8 @@ void testQueueRemoveAndClear() {
 void testPauseResumeAndFailureRetry() {
     romm::Status status = romm::makeDefaultStatus();
     goToRoms(status);
-    (void)romm::applyAction(status, romm::Action::Right); // SizeAsc
-    (void)romm::applyAction(status, romm::Action::Right); // SizeDesc (largest first)
+    (void)romm::applyAction(status, romm::Action::Right);  // SizeAsc
+    (void)romm::applyAction(status, romm::Action::Right);  // SizeDesc (largest first)
     (void)romm::applyAction(status, romm::Action::Select); // detail
     (void)romm::applyAction(status, romm::Action::Select); // enqueue
     (void)romm::applyAction(status, romm::Action::StartDownload);

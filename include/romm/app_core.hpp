@@ -56,6 +56,9 @@ struct PlatformEntry {
     std::string name;
     std::vector<RomEntry> roms;
     std::string slug;
+    std::string familyName;
+    std::string familySlug;
+    int generation{0};
 };
 
 struct QueueItem {
@@ -124,18 +127,18 @@ struct ApplyResult {
 };
 
 Status makeDefaultStatus();
-ApplyResult applyAction(Status &status, Action action);
-bool tickDownload(Status &status, uint32_t elapsedMs);
+ApplyResult applyAction(Status& status, Action action);
+bool tickDownload(Status& status, uint32_t elapsedMs);
 
-const char *viewName(Status::View view);
-const char *screenTitle(Status::View view);
-const char *screenHint(Status::View view);
-const char *actionName(Action action);
-const char *queueStateName(QueueState state);
-const char *romSortModeName(RomSortMode mode);
-const char *updaterStateName(UpdaterState state);
+const char* viewName(Status::View view);
+const char* screenTitle(Status::View view);
+const char* screenHint(Status::View view);
+const char* actionName(Action action);
+const char* queueStateName(QueueState state);
+const char* romSortModeName(RomSortMode mode);
+const char* updaterStateName(UpdaterState state);
 
-std::vector<std::string> buildStatusLines(const Status &status, bool colorize = false);
-std::vector<std::string> buildFramedStatusLines(const Status &status, bool colorize = false);
+std::vector<std::string> buildStatusLines(const Status& status, bool colorize = false);
+std::vector<std::string> buildFramedStatusLines(const Status& status, bool colorize = false);
 
 } // namespace romm

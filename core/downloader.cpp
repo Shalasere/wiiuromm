@@ -19,17 +19,13 @@ bool isRetryableHttpStatus(int code) {
     return code == 408 || code == 425 || code == 429 || (code >= 500 && code <= 599);
 }
 
-std::string base64Encode(const std::string &in) {
-    static const char kTable[] =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
+std::string base64Encode(const std::string& in) {
+    static const char kTable[] = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
     std::string out;
     out.reserve(((in.size() + 2) / 3) * 4);
     size_t i = 0;
     while (i + 2 < in.size()) {
-        const unsigned int n =
-            (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16) |
-            (static_cast<unsigned int>(static_cast<unsigned char>(in[i + 1])) << 8) |
-            static_cast<unsigned int>(static_cast<unsigned char>(in[i + 2]));
+        const unsigned int n = (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16) | (static_cast<unsigned int>(static_cast<unsigned char>(in[i + 1])) << 8) | static_cast<unsigned int>(static_cast<unsigned char>(in[i + 2]));
         out.push_back(kTable[(n >> 18) & 63]);
         out.push_back(kTable[(n >> 12) & 63]);
         out.push_back(kTable[(n >> 6) & 63]);
@@ -38,16 +34,13 @@ std::string base64Encode(const std::string &in) {
     }
     const size_t rem = in.size() - i;
     if (rem == 1) {
-        const unsigned int n =
-            (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16);
+        const unsigned int n = (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16);
         out.push_back(kTable[(n >> 18) & 63]);
         out.push_back(kTable[(n >> 12) & 63]);
         out.push_back('=');
         out.push_back('=');
     } else if (rem == 2) {
-        const unsigned int n =
-            (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16) |
-            (static_cast<unsigned int>(static_cast<unsigned char>(in[i + 1])) << 8);
+        const unsigned int n = (static_cast<unsigned int>(static_cast<unsigned char>(in[i])) << 16) | (static_cast<unsigned int>(static_cast<unsigned char>(in[i + 1])) << 8);
         out.push_back(kTable[(n >> 18) & 63]);
         out.push_back(kTable[(n >> 12) & 63]);
         out.push_back(kTable[(n >> 6) & 63]);
@@ -56,7 +49,7 @@ std::string base64Encode(const std::string &in) {
     return out;
 }
 
-HttpHeaders buildHeaders(const AppConfig &cfg) {
+HttpHeaders buildHeaders(const AppConfig& cfg) {
     HttpHeaders headers;
     if (!cfg.authToken.empty()) {
         headers.push_back({"Authorization", "Bearer " + cfg.authToken});
@@ -67,22 +60,25 @@ HttpHeaders buildHeaders(const AppConfig &cfg) {
 }
 
 void backoffWaitMs(int ms) {
-    if (ms <= 0) return;
+    if (ms <= 0)
+        return;
     const clock_t start = std::clock();
     while (true) {
         const clock_t now = std::clock();
-        if (now <= start) continue;
+        if (now <= start)
+            continue;
         const long elapsedMs = static_cast<long>((now - start) * 1000 / CLOCKS_PER_SEC);
-        if (elapsedMs >= ms) break;
+        if (elapsedMs >= ms)
+            break;
     }
 }
 
 } // namespace
 
-bool runDownloadQueue(const AppConfig &cfg, IHttpClient &client,
-                      const std::vector<DownloadRequest> &queue,
-                      IDownloadObserver &observer, std::string &outError) {
-    for (const auto &req : queue) {
+bool runDownloadQueue(const AppConfig& cfg, IHttpClient& client,
+                      const std::vector<DownloadRequest>& queue,
+                      IDownloadObserver& observer, std::string& outError) {
+    for (const auto& req : queue) {
         if (req.url.empty()) {
             ErrorInfo info;
             info.kind = ErrorKind::Parse;
@@ -129,10 +125,12 @@ bool runDownloadQueue(const AppConfig &cfg, IHttpClient &client,
             std::string streamError;
             const bool ok = client.streamGet(
                 req.url, buildHeaders(cfg), statusCode,
-                [&](const uint8_t *data, size_t size) {
-                    if (size == 0) return true;
-                    out.write(reinterpret_cast<const char *>(data), static_cast<std::streamsize>(size));
-                    if (!out.good()) return false;
+                [&](const uint8_t* data, size_t size) {
+                    if (size == 0)
+                        return true;
+                    out.write(reinterpret_cast<const char*>(data), static_cast<std::streamsize>(size));
+                    if (!out.good())
+                        return false;
                     downloaded += static_cast<uint64_t>(size);
                     DownloadProgress p;
                     p.id = req.id;
@@ -150,9 +148,7 @@ bool runDownloadQueue(const AppConfig &cfg, IHttpClient &client,
                 std::error_code ec;
                 fs::remove(outPath, ec);
                 lastError = classifyErrorText(streamError);
-                const bool retryable = (lastError.kind == ErrorKind::Network ||
-                                        lastError.kind == ErrorKind::Http ||
-                                        lastError.kind == ErrorKind::Unknown);
+                const bool retryable = (lastError.kind == ErrorKind::Network || lastError.kind == ErrorKind::Http || lastError.kind == ErrorKind::Unknown);
                 if (retryable && attempt < attemptsMax) {
                     backoffWaitMs(cfg.retryBackoffMs * attempt);
                     continue;

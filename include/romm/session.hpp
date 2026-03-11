@@ -14,7 +14,7 @@ struct AuthSession {
     std::string lastCheckDetail;
 };
 
-bool validateTokenPreflight(const AppConfig &cfg, IHttpClient &client,
-                            AuthSession &session, ErrorInfo &outInfo, std::string &outError);
+bool validateTokenPreflight(const AppConfig& cfg, IHttpClient& client,
+                            AuthSession& session, ErrorInfo& outInfo, std::string& outError);
 
 } // namespace romm

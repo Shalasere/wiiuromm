@@ -6,16 +6,28 @@ OUT="${1:-$ROOT/run/tas/wii_deterministic_smoke.dtm}"
 
 mkdir -p "$(dirname "$OUT")"
 
-python3 - "$OUT" <<'PY'
+PYTHON_CMD=()
+if command -v python3 >/dev/null 2>&1; then
+  PYTHON_CMD=(python3)
+elif command -v python >/dev/null 2>&1; then
+  PYTHON_CMD=(python)
+elif command -v py >/dev/null 2>&1; then
+  PYTHON_CMD=(py -3)
+else
+  echo "[fail] missing python interpreter (python3/python/py)" >&2
+  exit 1
+fi
+
+"${PYTHON_CMD[@]}" - "$OUT" <<'PY'
 import pathlib
 import struct
 import sys
 
 out = pathlib.Path(sys.argv[1])
 
-# Dolphin sets executable game IDs as "ID-<filename-without-ext>".
-# For wiiuromm.dol this becomes "ID-wiiuromm", and DTM stores only 6 bytes.
-game_id = b"ID-wii"
+# Homebrew DOL launched directly is shown as game ID 0000000 in Dolphin.
+# DTM stores only 6 bytes of game ID, so we use six zeroes.
+game_id = b"000000"
 
 header = bytearray(256)
 header[0:4] = b"DTM\x1A"

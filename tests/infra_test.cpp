@@ -12,14 +12,14 @@
 namespace {
 namespace fs = std::filesystem;
 
-void requireTrue(bool cond, const char *msg) {
+void requireTrue(bool cond, const char* msg) {
     if (!cond) {
         std::cerr << "FAILED: " << msg << "\n";
         std::exit(1);
     }
 }
 
-fs::path makeTempDir(const char *name) {
+fs::path makeTempDir(const char* name) {
     const fs::path p = fs::temp_directory_path() / ("wiiuromm_" + std::string(name));
     std::error_code ec;
     fs::remove_all(p, ec);

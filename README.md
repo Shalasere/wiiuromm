@@ -44,6 +44,13 @@ Install emulators:
 ./scripts/install-dolphin-arch.sh     # Arch system install (sudo)
 ```
 
+Windows (PowerShell) setup:
+
+```powershell
+.\scripts\setup-wii-toolchain.ps1
+.\scripts\install-emulators-windows.ps1
+```
+
 ## Build
 
 Wii U:
@@ -99,6 +106,19 @@ Fast dev loops:
 ```bash
 ./scripts/dev-wiiu.sh   # build + run in Cemu
 ./scripts/dev-wii.sh    # build + run in Dolphin
+```
+
+Windows fast dev loops:
+
+```powershell
+.\scripts\dev-wiiu.ps1
+.\scripts\dev-wii.ps1
+```
+
+Windows runtime smoke loop:
+
+```powershell
+.\scripts\test-runtime-emulators.ps1 -TimeoutSeconds 20
 ```
 
 ## Emulator Harness (Local Dev Loop)

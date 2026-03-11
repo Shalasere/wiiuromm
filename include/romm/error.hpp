@@ -20,8 +20,8 @@ struct ErrorInfo {
     std::string detail;
 };
 
-ErrorInfo classifyHttpStatus(int statusCode, const std::string &statusText = "");
-ErrorInfo classifyErrorText(const std::string &detail);
-const char *errorKindName(ErrorKind kind);
+ErrorInfo classifyHttpStatus(int statusCode, const std::string& statusText = "");
+ErrorInfo classifyErrorText(const std::string& detail);
+const char* errorKindName(ErrorKind kind);
 
 } // namespace romm

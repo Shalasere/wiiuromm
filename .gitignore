@@ -19,3 +19,14 @@ logs/
 *.log
 .env
 .env.*
+
+# Local reference/template dumps (not part of app source)
+external/savegame-manager-gx-template-r130/
+external/savegame-manager-gx-head.tar.gz
+external/savegame-manager-gx-r130.zip
+external/sgm_button.png.tmp.png
+external/taskbar_emu.head.png
+
+# Local test/build byproducts
+tests/*.exe
+wiiuromm.lst

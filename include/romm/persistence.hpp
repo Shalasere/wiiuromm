@@ -25,16 +25,16 @@ struct ResumeDecision {
     std::string reason;
 };
 
-bool saveQueueState(const Status &status, const std::string &path, std::string &outError);
-bool loadQueueState(Status &status, const std::string &path, std::string &outError);
+bool saveQueueState(const Status& status, const std::string& path, std::string& outError);
+bool loadQueueState(Status& status, const std::string& path, std::string& outError);
 
-bool writeCompletedManifest(const QueueItem &item, const std::string &manifestDir,
-                            std::string &outPath, std::string &outError);
-bool loadCompletedManifests(Status &status, const std::string &manifestDir, std::string &outError);
+bool writeCompletedManifest(const QueueItem& item, const std::string& manifestDir,
+                            std::string& outPath, std::string& outError);
+bool loadCompletedManifests(Status& status, const std::string& manifestDir, std::string& outError);
 
-std::vector<PartialChunk> detectPartChunks(const std::string &dir, const std::string &baseName,
-                                           std::string &outError);
-ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk> &chunks);
-const char *resumeModeName(ResumeMode mode);
+std::vector<PartialChunk> detectPartChunks(const std::string& dir, const std::string& baseName,
+                                           std::string& outError);
+ResumeDecision planResume(uint64_t expectedBytes, const std::vector<PartialChunk>& chunks);
+const char* resumeModeName(ResumeMode mode);
 
 } // namespace romm

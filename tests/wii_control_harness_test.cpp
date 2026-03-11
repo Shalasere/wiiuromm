@@ -6,20 +6,20 @@
 
 namespace {
 
-void requireTrue(bool cond, const char *msg) {
+void requireTrue(bool cond, const char* msg) {
     if (!cond) {
         std::cerr << "FAILED: " << msg << "\n";
         std::exit(1);
     }
 }
 
-void press(romm::Status &status, romm::ControlProfile profile, romm::LogicalButton button) {
+void press(romm::Status& status, romm::ControlProfile profile, romm::LogicalButton button) {
     const romm::Action action = romm::mapButtonToAction(profile, button);
     const romm::ApplyResult res = romm::applyAction(status, action);
     requireTrue(res.keepRunning, "harness action unexpectedly requested quit");
 }
 
-void tickUntilIdle(romm::Status &status, int maxTicks = 1200) {
+void tickUntilIdle(romm::Status& status, int maxTicks = 1200) {
     for (int i = 0; i < maxTicks && status.downloadWorkerRunning; ++i) {
         (void)romm::tickDownload(status, 16);
     }
